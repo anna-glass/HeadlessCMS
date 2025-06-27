@@ -1,103 +1,253 @@
+'use client';
+
+import { useState, useEffect, useRef } from 'react';
+import { supabase } from '@/lib/supabase';
+import { FaMicrophone, FaRobot, FaPlus, FaImage } from 'react-icons/fa';
+import { Message } from '@/app/types/Message';
+import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import Image from "next/image";
 
-export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+export default function ChatInterface() {
+  const [input, setInput] = useState('');
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [isRecording, setIsRecording] = useState(false);
+  const [selectedIntent, setSelectedIntent] = useState<'inventory' | 'story' | 'photos' | null>(null);
+  const [uploadedImages, setUploadedImages] = useState<File[]>([]);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
+  useEffect(() => {
+    fetchMessages();
+  }, []);
+
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height = textareaRef.current.scrollHeight + 'px';
+    }
+  }, [input]);
+
+  const fetchMessages = async () => {
+    const { data, error } = await supabase
+      .from('messages')
+      .select('*')
+      .order('created_at', { ascending: true });
+    if (error) console.error('Error fetching messages:', error);
+    else setMessages(data as Message[]);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!input.trim() && uploadedImages.length === 0) return;
+    
+    let imageUrls: string[] = [];
+    
+    // Upload images if any are selected
+    if (uploadedImages.length > 0) {
+      const formData = new FormData();
+      uploadedImages.forEach(file => {
+        formData.append('files', file);
+      });
+
+      try {
+        const response = await fetch('/api/upload', {
+          method: 'POST',
+          body: formData,
+        });
+        
+        const data = await response.json();
+        if (data.urls) {
+          imageUrls = data.urls;
+        }
+      } catch (err) {
+        console.error('Error uploading images:', err);
+        return;
+      }
+    }
+    
+    const { error } = await supabase
+      .from('messages')
+      .insert([{ 
+        content: input, 
+        user_id: 'demo_user',
+        intent: selectedIntent,
+        media: imageUrls.length > 0 ? imageUrls : undefined
+      }]);
+    
+    if (error) console.error('Error inserting message:', error);
+    else {
+      setInput('');
+      setSelectedIntent(null);
+      setUploadedImages([]);
+      fetchMessages();
+    }
+  };
+
+  const handleImageUpload = async (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+
+    // Store files locally
+    const fileArray = Array.from(files);
+    setUploadedImages(prev => [...prev, ...fileArray]);
+  };
+
+  const removeImage = (index: number) => {
+    setUploadedImages(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
+      audioChunksRef.current = [];
+
+      mediaRecorder.ondataavailable = (e) => {
+        if (e.data.size > 0) audioChunksRef.current.push(e.data);
+      };
+
+      mediaRecorder.onstop = async () => {
+        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/wav' });
+        await sendAudioToWhisper(audioBlob);
+      };
+
+      mediaRecorder.start();
+      setIsRecording(true);
+    } catch (err) {
+      console.error('Error accessing microphone:', err);
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current) {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+      mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
+    }
+  };
+
+  const sendAudioToWhisper = async (audioBlob: Blob) => {
+    const formData = new FormData();
+    formData.append('file', audioBlob, 'recording.wav');
+
+    try {
+      const response = await fetch('/api/whisper', {
+        method: 'POST',
+        body: formData,
+      });
+      const data = await response.json();
+      if (data.text) {
+        setInput(prev => prev + (prev ? ' ' : '') + data.text);
+      }
+    } catch (err) {
+      console.error('Error sending audio to Whisper:', err);
+    }
+  };
+
+  return (
+    <div className="flex flex-col min-h-screen items-center justify-center bg-background">
+      <Image src="/logo.svg" alt="Logo" width={150} height={100} priority className="p-4 hover:skew-x-5 transition-transform duration-300"/>
+      {/* Intent Buttons */}
+      <div className="flex gap-2 mb-4">
+            <Button
+              type="button"
+              variant={selectedIntent === 'inventory' ? "lift" : "liftOutline"}
+              onClick={() => setSelectedIntent(selectedIntent === 'inventory' ? null : 'inventory')}
+              className="flex-1"
+            >
+              🌲 Inventory
+            </Button>
+            <Button
+              type="button"
+              variant={selectedIntent === 'story' ? "lift" : "liftOutline"}
+              onClick={() => setSelectedIntent(selectedIntent === 'story' ? null : 'story')}
+              className="flex-1"
+            >
+              ☕️ Story
+            </Button>
+            <Button
+              type="button"
+              variant={selectedIntent === 'photos' ? "lift" : "liftOutline"}
+              onClick={() => setSelectedIntent(selectedIntent === 'photos' ? null : 'photos')}
+              className="flex-1"
+            >
+              📷 Photos
+            </Button>
+          </div>
+      <Card className="w-full max-w-2xl">
+        <CardContent className="flex flex-col overflow-y-auto py-2">
+          {/* Uploaded Images Preview */}
+          {uploadedImages.length > 0 && (
+            <div className="flex flex-wrap gap-2 mb-4">
+              {uploadedImages.map((file, index) => (
+                <div key={index} className="relative">
+                  <img
+                    src={URL.createObjectURL(file)}
+                    alt={`Uploaded ${index + 1}`}
+                    className="w-16 h-16 object-cover rounded-md"
+                  />
+                  <button
+                    onClick={() => removeImage(index)}
+                    className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs"
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="flex w-full gap-2 items-center">
+            <textarea
+              ref={textareaRef}
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder="Type or say something..."
+              className="flex-1 resize-none rounded-md border-0 bg-transparent px-3 py-2 text-base text-foreground placeholder:text-muted-foreground transition-[color,box-shadow] outline-none focus:border-0 focus-visible:border-0 focus-visible:ring-0 focus:ring-0 max-h-[600px] min-h-[44px] overflow-auto scrollbar-none"
+              rows={1}
+              style={{ height: 'auto' }}
             />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+          </form>
+          
+          <div className="flex flex-row gap-2 justify-end mt-2">
+            <input
+              ref={fileInputRef}
+              type="file"
+              multiple
+              accept="image/*"
+              onChange={(e) => handleImageUpload(e.target.files)}
+              className="hidden"
+            />
+            <Button
+              type="button"
+              variant="defaultOutline"
+              onClick={() => fileInputRef.current?.click()}
+              aria-label="Upload images"
+            >
+              <FaPlus className="text-primary" />
+            </Button>
+            <Button
+                type="button"
+                variant={isRecording ? "destructive" : "defaultOutline"}
+                onClick={isRecording ? stopRecording : startRecording}
+                aria-label={isRecording ? "Stop recording" : "Start recording"}
+              >
+                <FaMicrophone className="text-primary" />
+              </Button>
+              <Button 
+                type="submit" 
+                variant="lift"
+                disabled={!input.trim() && uploadedImages.length === 0 || !selectedIntent}
+                onClick={handleSubmit}
+              >
+                Send
+              </Button>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

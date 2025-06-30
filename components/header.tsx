@@ -8,15 +8,16 @@
 import Image from 'next/image';
 import { UserButton } from '@stackframe/stack';
 
-export async function Header() {
+export function Header() {
     return (
-        <header className="w-full flex justify-between items-center px-6 py-4 z-10">
-            <div className="font-medium text-[15px] tracking-tight">
-                <Image src="/logo.svg" alt="logo" width={50} height={28} priority />
-            </div>
-            <div className="flex items-center gap-4">
-                <UserButton />
-            </div>
-        </header>
+      <header className="fixed top-0 left-0 right-0 w-full flex justify-between items-center px-6 py-4 shadow-sm z-50">
+        <div className="font-medium text-[15px] tracking-tight">
+          <Image src="/logo.svg" alt="logo" width={50} height={28} priority />
+        </div>
+        <div className="flex items-center gap-4">
+          <UserButton />
+        </div>
+      </header>
     );
-}
+  }
+  

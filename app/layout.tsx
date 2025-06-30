@@ -1,3 +1,10 @@
+//
+// layout.tsx
+// anna 6/29/25
+// chapter street inc, 2025 ©
+// layout (stack auth wrapper)
+//
+
 import type { Metadata } from "next";
 import { StackProvider, StackTheme } from "@stackframe/stack";
 import { stackServerApp } from "./stack";

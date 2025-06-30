@@ -1,4 +1,10 @@
-// components/IntentSelector.tsx
+//
+// IntentSelector.tsx
+// anna 6/27/25
+// chapter street inc, 2025 ©
+// user intent selector component for chat
+//
+
 import { Button } from "@/components/ui/button";
 
 type Intent = 'inventory' | 'story' | 'photos' | null;

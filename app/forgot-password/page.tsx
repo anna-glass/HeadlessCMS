@@ -1,3 +1,10 @@
+//
+// forgot-password.tsx
+// anna 6/29/25
+// chapter street inc, 2025 ©
+// forgot password page (stack auth handles this)
+//
+
 'use client';
 import { ForgotPassword } from "@stackframe/stack";
 

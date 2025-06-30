@@ -1,3 +1,10 @@
+//
+// whisper.tsx
+// anna 6/27/25
+// chapter street inc, 2025 ©
+// whisper api route (transcribe audio to text)
+//
+
 import { NextResponse } from 'next/server';
 import OpenAI from 'openai';
 

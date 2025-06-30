@@ -1,3 +1,10 @@
+//
+// input.tsx
+// anna 6/29/25
+// chapter street inc, 2025 ©
+// shadcn/ui input component
+//
+
 import * as React from "react"
 
 import { cn } from "@/lib/utils"

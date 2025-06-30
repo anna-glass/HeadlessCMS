@@ -1,4 +1,10 @@
-// components/MessageInput.tsx
+//
+// MessageInput.tsx
+// anna 6/29/25
+// chapter street inc, 2025 ©
+// message input component for chat
+//
+
 import { useRef, useEffect } from 'react';
 import { FaMicrophone, FaPlus } from 'react-icons/fa';
 import { Button } from "@/components/ui/button";

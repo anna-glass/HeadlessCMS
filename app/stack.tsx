@@ -1,3 +1,10 @@
+//
+// stack.tsx
+// anna 6/29/25
+// chapter street inc, 2025 ©
+// stack auth server app
+//
+
 import "server-only";
 
 import { StackServerApp } from "@stackframe/stack";

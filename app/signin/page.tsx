@@ -1,3 +1,10 @@
+//
+// signin.tsx
+// anna 6/29/25
+// chapter street inc, 2025 ©
+// signin page (stack auth handles this)
+//
+
 import { SignIn } from "@stackframe/stack";
 import { Card, CardContent } from "@/components/ui/card";
 

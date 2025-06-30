@@ -1,3 +1,10 @@
+//
+// label.tsx
+// anna 6/29/25
+// chapter street inc, 2025 ©
+// shadcn/ui label component
+//
+
 "use client"
 
 import * as React from "react"

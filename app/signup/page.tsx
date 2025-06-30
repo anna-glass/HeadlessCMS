@@ -1,3 +1,10 @@
+//
+// signup.tsx
+// anna 6/29/25
+// chapter street inc, 2025 ©
+// signup page (stack auth handles this)
+//
+
 import { SignUp } from "@stackframe/stack";
 import { Card, CardContent } from "@/components/ui/card";
 

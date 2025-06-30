@@ -1,3 +1,10 @@
+//
+// chat.tsx
+// anna 6/29/25
+// chapter street inc, 2025 ©
+// chat page
+//
+
 'use client';
 
 import { useState, useRef } from 'react';
@@ -7,7 +14,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import IntentSelector from '@/app/chat/components/IntentSelector';
 import ImagePreviewList from '@/app/chat/components/ImagePreviewList';
 import MessageInput from '@/app/chat/components/MessageInput';
-import UserAvatar from '@/app/chat/components/UserAvatar';
 
 export default function ChatPage() {
   const [input, setInput] = useState('');

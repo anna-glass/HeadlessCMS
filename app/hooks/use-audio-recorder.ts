@@ -1,4 +1,10 @@
-// hooks/useAudioRecorder.ts
+//
+// useAudioRecorder.ts
+// anna 6/29/25
+// chapter street inc, 2025 ©
+// audio recorder hook for chat
+//
+
 import { useRef, useState } from 'react';
 
 export function useAudioRecorder(onStop: (audioBlob: Blob) => void) {

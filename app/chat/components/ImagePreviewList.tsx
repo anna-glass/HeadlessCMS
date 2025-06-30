@@ -1,4 +1,10 @@
-// components/ImagePreviewList.tsx
+//
+// ImagePreviewList.tsx
+// anna 6/29/25
+// chapter street inc, 2025 ©
+// preview uploaded images in chat
+//
+
 interface ImagePreviewListProps {
     uploadedImages: File[];
     onRemove: (index: number) => void;

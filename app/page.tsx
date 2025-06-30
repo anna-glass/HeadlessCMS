@@ -1,6 +1,14 @@
+//
+// page.tsx
+// anna 6/29/25
+// chapter street inc, 2025 ©
+// home page
+//
+
 import { Header } from "@/components/header";
 import { stackServerApp } from "./stack";
 import ChatPage from "./chat/page";
+import SignInPage from "./signin/page";
 
 export default async function Home() {
   const user = await stackServerApp.getUser();
@@ -8,8 +16,7 @@ export default async function Home() {
   return (
     <div>
       <Header />
-      {user ? <ChatPage /> : <p>Please log in to access the chat.</p>}
-      {/* Or redirect to login if you prefer */}
+      {user ? <ChatPage /> : <SignInPage />}
     </div>
   );
 }

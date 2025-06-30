@@ -1,22 +1,15 @@
-'use client';
+import { Header } from "@/components/header";
+import { stackServerApp } from "./stack";
+import ChatPage from "./chat/page";
 
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { useAuth } from '@/app/hooks/use-auth';
+export default async function Home() {
+  const user = await stackServerApp.getUser();
 
-export default function Home() {
-  const { session } = useAuth();
-  const router = useRouter();
-
-  useEffect(() => {
-    if (session === undefined) return;
-
-    if (session) {
-      router.replace('/chat');
-    } else {
-      router.replace('/login');
-    }
-  }, [session, router]);
-
-  return null;
+  return (
+    <div>
+      <Header />
+      {user ? <ChatPage /> : <p>Please log in to access the chat.</p>}
+      {/* Or redirect to login if you prefer */}
+    </div>
+  );
 }

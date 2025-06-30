@@ -1,12 +1,8 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useRef } from 'react';
 import Image from "next/image";
-import { useAuth } from '@/app/hooks/use-auth';
 import { useAudioRecorder } from '@/app/hooks/use-audio-recorder';
-import { fetchMessages } from '@/lib/fetch-messages';
-import { Message } from '@/app/types/Message';
 import { Card, CardContent } from "@/components/ui/card";
 import IntentSelector from '@/app/chat/components/IntentSelector';
 import ImagePreviewList from '@/app/chat/components/ImagePreviewList';
@@ -14,26 +10,13 @@ import MessageInput from '@/app/chat/components/MessageInput';
 import UserAvatar from '@/app/chat/components/UserAvatar';
 
 export default function ChatPage() {
-  const { session, supabase } = useAuth();
-  const router = useRouter();
-
   const [input, setInput] = useState('');
-  const [messages, setMessages] = useState<Message[]>([]);
   const [selectedIntent, setSelectedIntent] = useState<'inventory' | 'story' | 'photos' | null>(null);
   const [uploadedImages, setUploadedImages] = useState<File[]>([]);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { isRecording, startRecording, stopRecording } = useAudioRecorder(sendAudioToWhisper);
-
-  useEffect(() => {
-    if (session === undefined) return; // wait for Supabase
-    if (session === null) {
-      router.replace('/login');
-    } else {
-      fetchMessages().then(setMessages).catch(console.error);
-    }
-  }, [session, router]);
 
   async function sendAudioToWhisper(audioBlob: Blob) {
     const formData = new FormData();
@@ -77,26 +60,7 @@ export default function ChatPage() {
         return;
       }
     }
-
-    const { error } = await supabase
-      .from('messages')
-      .insert([{
-        content: input,
-        user_id: session?.user?.id || 'demo_user',
-        intent: selectedIntent,
-        media: imageUrls.length > 0 ? imageUrls : undefined
-      }]);
-
-    if (error) {
-      console.error('Error inserting message:', error);
-    } else {
-      setInput('');
-      setSelectedIntent(null);
-      setUploadedImages([]);
-      fetchMessages().then(setMessages).catch(console.error);
-    }
   }
-
   function handleImageUpload(files: FileList | null) {
     if (!files || files.length === 0) return;
     const fileArray = Array.from(files);
@@ -109,7 +73,6 @@ export default function ChatPage() {
 
   return (
     <div className="flex flex-col min-h-screen items-center justify-center bg-background">
-      <UserAvatar />
       <Image src="/logo.svg" alt="Logo" width={150} height={100} priority className="p-4 hover:skew-x-5 transition-transform duration-300" />
 
       <IntentSelector

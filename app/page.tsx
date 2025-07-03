@@ -5,7 +5,6 @@
 // home page
 //
 
-import { Header } from "@/components/header";
 import { stackServerApp } from "./stack";
 import ChatPage from "./chat/page";
 import SignInPage from "./signin/page";
@@ -14,8 +13,7 @@ export default async function Home() {
   const user = await stackServerApp.getUser();
 
   return (
-    <div>
-      <Header />
+    <div className="w-9/10">
       {user ? <ChatPage /> : <SignInPage />}
     </div>
   );

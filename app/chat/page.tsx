@@ -78,7 +78,7 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="flex flex-col min-h-screen items-center justify-center bg-background">
+    <div className="flex flex-col items-center justify-center">
       <Image src="/logo.svg" alt="Logo" width={150} height={100} priority className="p-4 hover:skew-x-5 transition-transform duration-300" />
 
       <IntentSelector
@@ -86,7 +86,7 @@ export default function ChatPage() {
         onSelect={setSelectedIntent}
       />
 
-      <Card className="w-full max-w-2xl">
+      <Card className="w-full max-w-2xl mx-auto">
         <CardContent className="flex flex-col overflow-y-auto py-2">
           <ImagePreviewList
             uploadedImages={uploadedImages}

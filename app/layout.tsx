@@ -1,19 +1,12 @@
-//
-// layout.tsx
-// anna 6/29/25
-// chapter street inc, 2025 ©
-// layout (stack auth wrapper)
-//
-
 import type { Metadata } from "next";
 import { StackProvider, StackTheme } from "@stackframe/stack";
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { AppSidebar } from "@/components/app-sidebar";
 import { stackServerApp } from "./stack";
 import { Inter } from "next/font/google";
 import "./globals.css";
 
-const inter = Inter({
-  subsets: ["latin"],
-});
+const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "Chapter Street",
@@ -27,9 +20,23 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={inter.className}><StackProvider app={stackServerApp}><StackTheme>
-        {children}
-      </StackTheme></StackProvider></body>
+      <body className={inter.className}>
+        <StackProvider app={stackServerApp}>
+          <StackTheme>
+            <SidebarProvider>
+              <div className="flex min-h-screen min-w-full">
+                <AppSidebar />
+                <main className="flex flex-1 flex-col p-4">
+                  <SidebarTrigger className="mb-4 self-start" />
+                  <div className="flex flex-1 items-center justify-center w-full">
+                    {children}
+                  </div>
+                </main>
+              </div>
+            </SidebarProvider>
+          </StackTheme>
+        </StackProvider>
+      </body>
     </html>
   );
 }

@@ -1,17 +1,10 @@
-//
-// page.tsx
-// anna 6/29/25
-// chapter street inc, 2025 ©
-// home page
-//
-
-import { stackServerApp } from "./stack";
-import ChatPage from "./chat/page";
-import SignInPage from "./signin/page";
+import SignInPage from "../signin/page";
+import { stackServerApp } from "../stack";
+import Inventory from "./Inventory";
 import { redirect } from "next/navigation";
 import { checkUserOrganization } from "@/lib/check-organization";
 
-export default async function Home() {
+export default async function InventoryPage() {
   const user = await stackServerApp.getUser();
 
   if (!user) {
@@ -26,6 +19,9 @@ export default async function Home() {
     redirect('/onboarding');
   }
 
-  return <ChatPage />;
+  return (
+    <div className="w-9/10">
+      <Inventory initialData={[]} />
+    </div>
+  );
 }
-

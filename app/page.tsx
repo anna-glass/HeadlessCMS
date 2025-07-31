@@ -8,7 +8,7 @@
 import { stackServerApp } from "./stack";
 import SignInPage from "./signin/page";
 import { redirect } from "next/navigation";
-import { checkUserOrganization } from "@/lib/utils";
+import { checkUserOrganization } from "@/lib/check-organization";
 import InventoryPage from "./inventory/page";
 
 export default async function Home() {

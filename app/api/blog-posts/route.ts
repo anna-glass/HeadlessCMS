@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body: BlogPost = await request.json();
-    const { title, image, body, slug } = body;
+    const { title, image, body: postBody, slug } = body;
 
     if (!title) {
       return NextResponse.json({ error: 'Post title is required' }, { status: 400 });
@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
     // Create the blog post
     const result = await sql`
       INSERT INTO posts (organization_id, title, slug, image_url, body)
-      VALUES (${organizationId}, ${title}, ${slug || title.toLowerCase().replace(/\s+/g, '-')}, ${image || null}, ${body || null})
+      VALUES (${organizationId}, ${title}, ${slug || title.toLowerCase().replace(/\s+/g, '-')}, ${image || null}, ${postBody || null})
       RETURNING *
     `;
 

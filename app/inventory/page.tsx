@@ -9,7 +9,7 @@ import SignInPage from "../signin/page";
 import { stackServerApp } from "../stack";
 import Inventory from "./Inventory";
 import { redirect } from "next/navigation";
-import { checkUserOrganization } from "@/lib/utils";
+import { checkUserOrganization } from "@/lib/check-organization";
 import { sql } from "@/lib/db";
 import { Product } from "@/lib/types/product";
 

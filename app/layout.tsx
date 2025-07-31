@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { StackProvider, StackTheme } from "@stackframe/stack";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
-import { SidebarWrapper } from "@/app/sidebar/sidebar-wrapper";
+import { SidebarWrapper } from "@/components/sidebar-wrapper";
 import { stackServerApp } from "./stack";
 import { Inter } from "next/font/google";
 import "./globals.css";

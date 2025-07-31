@@ -1,4 +1,7 @@
-import { Calendar, Home, Inbox, Package, Search, Settings } from "lucide-react"
+'use client'
+
+import { Home, Package, Edit } from "lucide-react"
+import { useState } from "react"
 
 import {
   Sidebar,
@@ -15,47 +18,70 @@ import {
 
 import Image from "next/image"
 import { UserButton } from '@stackframe/stack';
+import { Organization } from "@/lib/types/organization";
+import { OrganizationEditModal } from "./organization-edit-modal";
 
 // Menu items.
 const items = [
   {
     title: "Home",
-    url: "#",
+    url: "/",
     icon: Home,
-  },
-  {
-    title: "Inbox",
-    url: "#",
-    icon: Inbox,
-  },
-  {
-    title: "Calendar",
-    url: "#",
-    icon: Calendar,
   },
   {
     title: "Inventory",
     url: "/inventory",
     icon: Package,
   },
-  {
-    title: "Search",
-    url: "#",
-    icon: Search,
-  },
-  {
-    title: "Settings",
-    url: "#",
-    icon: Settings,
-  },
 ]
 
-export function AppSidebar() {
+interface AppSidebarProps {
+  organization: Organization | null;
+}
+
+export function AppSidebar({ organization }: AppSidebarProps) {
+  const [currentOrganization, setCurrentOrganization] = useState<Organization | null>(organization);
+
+  const handleOrganizationUpdated = (updatedOrganization: Organization) => {
+    setCurrentOrganization(updatedOrganization);
+  };
+
   return (
     <Sidebar collapsible="icon">
-        <SidebarHeader>
-          <Image src="/logo.svg" alt="logo" width={100} height={28} priority />
-        </SidebarHeader>
+      <SidebarHeader className="p-4">
+        <div className="flex items-center gap-4">
+          {currentOrganization?.logo_url ? (
+            <div className="w-10 h-10 rounded-md overflow-hidden flex-shrink-0">
+              <Image 
+                src={currentOrganization.logo_url} 
+                alt={currentOrganization.name} 
+                width={40} 
+                height={40} 
+                className="w-full h-full object-cover"
+                priority 
+              />
+            </div>
+          ) : (
+            <div className="w-10 h-10 bg-gray-200 rounded-md flex items-center justify-center flex-shrink-0">
+              <Package className="w-5 h-5 text-gray-500" />
+            </div>
+          )}
+          <div className="flex flex-col min-w-0 flex-1">
+            <h3 className="text-sm font-semibold truncate">
+              {currentOrganization?.name || 'Organization'}
+            </h3>
+          </div>
+          <OrganizationEditModal
+            organization={currentOrganization}
+            onOrganizationUpdated={handleOrganizationUpdated}
+            trigger={
+              <button className="p-1 hover:bg-gray-100 rounded-md transition-colors">
+                <Edit className="w-4 h-4 text-gray-500" />
+              </button>
+            }
+          />
+        </div>
+      </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupContent>
@@ -75,7 +101,15 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
       <SidebarFooter>
-        <UserButton />
+        <SidebarGroup>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <UserButton />
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
       </SidebarFooter>
     </Sidebar>
   )

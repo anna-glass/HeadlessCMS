@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
     
     const organization = userOrganizations.length > 0 ? userOrganizations[0] : null;
     
-    return NextResponse.json({ organization });
+    return NextResponse.json(organization);
   } catch (error) {
     console.error('Error checking user organization:', error);
     return NextResponse.json(

@@ -1,160 +1,255 @@
 // Inventory.tsx
 'use client'
 
-import { useState, useMemo } from "react";
-import {
-  ColumnDef,
-  flexRender,
-  getCoreRowModel,
-  getFilteredRowModel,
-  getSortedRowModel,
-  useReactTable,
-} from "@tanstack/react-table";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-
-interface Product {
-  id: string;
-  user_id: string;
-  name: string;
-  description: string;
-  price: number;
-  stock: number;
-  images: string[];
-  status: "draft" | "live" | "archived";
-  created_at: string;
-  updated_at: string;
-}
+import { Product } from "@/lib/types/product";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import ProductModal from "./ProductModal";
+import { MoreHorizontal, Edit, Trash2, Eye, EyeOff, Archive, Plus, Clock, CheckCircle, Image as ImageIcon } from "lucide-react";
+import Image from "next/image";
 
 export default function Inventory({ initialData }: { initialData: Product[] }) {
   const [data, setData] = useState<Product[]>(initialData);
   const [globalFilter, setGlobalFilter] = useState("");
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [editModalOpen, setEditModalOpen] = useState(false);
 
-  const columns = useMemo<ColumnDef<Product>[]>(
-    () => [
-      {
-        header: "Name",
-        accessorKey: "name",
-        cell: info => <Input defaultValue={info.getValue() as string} onBlur={e => handleEdit(info.row.original.id, "name", e.target.value)} />,
-      },
-      {
-        header: "Description",
-        accessorKey: "description",
-        cell: info => <Input defaultValue={info.getValue() as string} onBlur={e => handleEdit(info.row.original.id, "description", e.target.value)} />,
-      },
-      {
-        header: "Price",
-        accessorKey: "price",
-        cell: info => <Input type="number" defaultValue={info.getValue()?.toString()} onBlur={e => handleEdit(info.row.original.id, "price", parseFloat(e.target.value))} />,
-      },
-      {
-        header: "Stock",
-        accessorKey: "stock",
-        cell: info => <Input type="number" defaultValue={info.getValue()?.toString()} onBlur={e => handleEdit(info.row.original.id, "stock", parseInt(e.target.value))} />,
-      },
-      {
-        header: "Status",
-        accessorKey: "status",
-      },
-      {
-        header: "Actions",
-        cell: info => (
-          <Button variant="destructive" onClick={() => handleDelete(info.row.original.id)}>
-            Delete
-          </Button>
-        ),
-      },
-    ],
-    [data]
+  // Filter products based on search
+  const filteredProducts = data.filter(product =>
+    product.name.toLowerCase().includes(globalFilter.toLowerCase()) ||
+    product.description.toLowerCase().includes(globalFilter.toLowerCase()) ||
+    product.status.toLowerCase().includes(globalFilter.toLowerCase())
   );
-
-  const table = useReactTable({
-    data,
-    columns,
-    state: {
-      globalFilter,
-    },
-    getCoreRowModel: getCoreRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    onGlobalFilterChange: setGlobalFilter,
-  });
-
-  const handleEdit = async (id: string, key: keyof Product, value: any) => {
-    const updated = data.map(product =>
-      product.id === id ? { ...product, [key]: value, updated_at: new Date().toISOString() } : product
-    );
-    setData(updated);
-    await updateProduct(id, { [key]: value });
-  };
 
   const handleDelete = async (id: string) => {
     await deleteProduct(id);
     setData(data.filter(p => p.id !== id));
   };
 
-  const handleAdd = async () => {
-    const newProduct = await createProduct();
+  const handleAdd = (newProduct: Product) => {
     setData([newProduct, ...data]);
   };
 
+  const handleEdit = (product: Product) => {
+    setEditingProduct(product);
+    setEditModalOpen(true);
+  };
+
+  const handleProductUpdated = (updatedProduct: Product) => {
+    setData(data.map(p => p.id === updatedProduct.id ? updatedProduct : p));
+  };
+
+  const handleStatusChange = async (productId: string, newStatus: 'draft' | 'scheduled' | 'live' | 'sold' | 'archived') => {
+    try {
+      const response = await fetch(`/api/products/${productId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus }),
+      });
+
+      if (!response.ok) throw new Error('Failed to update status');
+
+      const updatedProduct = await response.json();
+      setData(data.map(p => p.id === productId ? updatedProduct : p));
+    } catch (error) {
+      console.error('Error updating status:', error);
+      alert('Failed to update status');
+    }
+  };
+
+  const getStatusStyle = (status: string) => {
+    switch (status) {
+      case 'live':
+        return 'bg-green-100 text-green-800';
+      case 'draft':
+        return 'bg-gray-100 text-gray-800';
+      case 'scheduled':
+        return 'bg-blue-100 text-blue-800';
+      case 'sold':
+        return 'bg-purple-100 text-purple-800';
+      case 'archived':
+        return 'bg-red-100 text-red-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
+
   return (
-    <div className="p-4">
+    <div className="w-full">
       <div className="flex justify-between mb-4">
         <Input
-          placeholder="Search..."
+          placeholder="Search products..."
           value={globalFilter}
           onChange={e => setGlobalFilter(e.target.value)}
+          className="max-w-sm"
         />
-        <Button onClick={handleAdd}>Add Product</Button>
+        <ProductModal
+          mode="add"
+          onProductAdded={handleAdd}
+          trigger={
+            <Button>
+              <Plus className="h-4 w-4 mr-2" />
+              Add Product
+            </Button>
+          }
+        />
       </div>
-      <table className="w-full text-left border">
-        <thead>
-          {table.getHeaderGroups().map(headerGroup => (
-            <tr key={headerGroup.id}>
-              {headerGroup.headers.map(header => (
-                <th key={header.id} className="border p-2">
-                  {flexRender(header.column.columnDef.header, header.getContext())}
-                </th>
-              ))}
-            </tr>
-          ))}
-        </thead>
-        <tbody>
-          {table.getRowModel().rows.map(row => (
-            <tr key={row.id}>
-              {row.getVisibleCells().map(cell => (
-                <td key={cell.id} className="border p-2">
-                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                </td>
-              ))}
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      
+      <div className="rounded-md border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Images</TableHead>
+              <TableHead>Name</TableHead>
+              <TableHead>Description</TableHead>
+              <TableHead>Price</TableHead>
+              <TableHead>Stock</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Created At</TableHead>
+              <TableHead>Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {filteredProducts.map((product) => (
+              <TableRow key={product.id}>
+                <TableCell>
+                  {product.images && product.images.length > 0 ? (
+                    <div className="flex space-x-1">
+                      {product.images.slice(0, 3).map((image, index) => (
+                        <div key={index} className="w-8 h-8 rounded border overflow-hidden flex-shrink-0">
+                          <Image
+                            src={image}
+                            alt={`Product image ${index + 1}`}
+                            width={32}
+                            height={32}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                      ))}
+                      {product.images.length > 3 && (
+                        <div className="w-8 h-8 rounded border bg-muted flex items-center justify-center text-xs text-muted-foreground">
+                          +{product.images.length - 3}
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="w-8 h-8 rounded border bg-muted flex items-center justify-center">
+                      <ImageIcon className="w-4 h-4 text-muted-foreground" />
+                    </div>
+                  )}
+                </TableCell>
+                <TableCell>{product.name}</TableCell>
+                <TableCell>{product.description}</TableCell>
+                <TableCell>{product.price}</TableCell>
+                <TableCell>{product.stock}</TableCell>
+                <TableCell>
+                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusStyle(product.status)}`}>
+                    {product.status}
+                  </span>
+                </TableCell>
+                <TableCell>
+                  {new Date(product.created_at).toLocaleDateString()}
+                </TableCell>
+                <TableCell>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" className="h-8 w-8 p-0">
+                        <span className="sr-only">Open menu</span>
+                        <MoreHorizontal className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => handleEdit(product)}>
+                        <Edit className="mr-2 h-4 w-4" />
+                        Edit
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem 
+                        onClick={() => handleStatusChange(product.id, 'draft')}
+                        disabled={product.status === 'draft'}
+                      >
+                        <EyeOff className="mr-2 h-4 w-4" />
+                        Set to Draft
+                      </DropdownMenuItem>
+                      <DropdownMenuItem 
+                        onClick={() => handleStatusChange(product.id, 'scheduled')}
+                        disabled={product.status === 'scheduled'}
+                      >
+                        <Clock className="mr-2 h-4 w-4" />
+                        Set to Scheduled
+                      </DropdownMenuItem>
+                      <DropdownMenuItem 
+                        onClick={() => handleStatusChange(product.id, 'live')}
+                        disabled={product.status === 'live'}
+                      >
+                        <Eye className="mr-2 h-4 w-4" />
+                        Set to Live
+                      </DropdownMenuItem>
+                      <DropdownMenuItem 
+                        onClick={() => handleStatusChange(product.id, 'sold')}
+                        disabled={product.status === 'sold'}
+                      >
+                        <CheckCircle className="mr-2 h-4 w-4" />
+                        Mark as Sold
+                      </DropdownMenuItem>
+                      <DropdownMenuItem 
+                        onClick={() => handleStatusChange(product.id, 'archived')}
+                        disabled={product.status === 'archived'}
+                      >
+                        <Archive className="mr-2 h-4 w-4" />
+                        Archive
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem 
+                        onClick={() => handleDelete(product.id)}
+                        className="text-red-600"
+                      >
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        Delete
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </TableCell>
+              </TableRow>
+            ))}
+            {filteredProducts.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
+                  {globalFilter ? 'No products found matching your search.' : 'No products yet. Click "Add Product" to get started.'}
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </div>
+      
+      <ProductModal
+        mode="edit"
+        product={editingProduct}
+        open={editModalOpen}
+        onOpenChange={setEditModalOpen}
+        onProductUpdated={handleProductUpdated}
+      />
     </div>
   );
 }
 
-export async function createProduct() {
-    const res = await fetch('/api/products', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        name: 'Untitled Product',
-        description: '',
-        price: 0,
-        stock: 0,
-        images: [],
-        status: 'draft',
-      }),
-    });
-  
-    if (!res.ok) throw new Error('Failed to create product');
-    return await res.json();
-}
-
-  
 export async function deleteProduct(id: string) {
     const res = await fetch(`/api/products/${id}`, {
         method: 'DELETE',
@@ -163,15 +258,6 @@ export async function deleteProduct(id: string) {
     if (!res.ok) throw new Error('Failed to delete product');
 }
 
-export async function updateProduct(id: string, updates: Partial<Product>) {
-    const res = await fetch(`/api/products/${id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(updates),
-    });
-  
-    if (!res.ok) throw new Error('Failed to update product');
-    return await res.json();
-}
+
   
   

@@ -41,6 +41,7 @@ CREATE TABLE products (
   stock INTEGER NOT NULL DEFAULT 0,
   images TEXT[], -- array of image URLs
   tags TEXT[], -- array of product tags
+  drop_id UUID REFERENCES drops(id), -- nullable reference to drops table
   status TEXT NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'scheduled', 'live', 'sold', 'archived')),
   created_at TIMESTAMPTZ DEFAULT now(),
   updated_at TIMESTAMPTZ DEFAULT now()
@@ -216,5 +217,19 @@ CREATE TABLE social_links (
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW(),
     UNIQUE (footer_id, platform)
+);
+*/
+
+// SQL schema for drops table:
+/*
+CREATE TABLE drops (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+    title VARCHAR(255) NOT NULL,
+    description TEXT,
+    scheduled_at TIMESTAMPTZ NOT NULL,
+    status TEXT NOT NULL DEFAULT 'scheduled' CHECK (status IN ('scheduled', 'live', 'completed', 'cancelled')),
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 */

@@ -1,6 +1,6 @@
 'use client'
 
-import { Home, Package, Edit, BarChart3, Globe, FileText } from "lucide-react"
+import { Home, Package, Edit, BarChart3, Globe, FileText, Calendar } from "lucide-react"
 import { useState } from "react"
 
 import {
@@ -32,6 +32,11 @@ const items = [
     title: "Inventory",
     url: "/inventory",
     icon: Package,
+  },
+  {
+    title: "Scheduled Drops",
+    url: "/drops",
+    icon: Calendar,
   },
   {
     title: "Website",

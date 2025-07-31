@@ -14,6 +14,7 @@ export interface Product {
   stock: number;
   images: string[];
   tags: string[]; // array of product tags
+  drop_id?: string; // nullable reference to drops table
   status: "draft" | "scheduled" | "live" | "sold" | "archived";
   created_at: string;
   updated_at: string;

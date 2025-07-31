@@ -3,17 +3,25 @@
 import { Card, CardContent } from '@/components/ui/card'
 import { themes, Theme } from '@/lib/types/theme'
 import { getFontClass } from '@/lib/fonts'
+import { CustomThemeModal } from './custom-theme-modal'
 import { Check } from 'lucide-react'
 
 interface ThemeSelectorProps {
   selectedTheme: string
   onThemeSelect: (themeId: string) => void
+  onCustomThemeCreate?: (theme: any) => void
 }
 
-export function ThemeSelector({ selectedTheme, onThemeSelect }: ThemeSelectorProps) {
+export function ThemeSelector({ selectedTheme, onThemeSelect, onCustomThemeCreate }: ThemeSelectorProps) {
   return (
-    <div className="flex flex-row w-full gap-4">
-      {themes.map((theme) => (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h3 className="text-lg font-semibold">Choose Theme</h3>
+        <CustomThemeModal onThemeCreate={onCustomThemeCreate || (() => {})} />
+      </div>
+      
+      <div className="flex flex-row w-full gap-4">
+        {themes.map((theme) => (
         <Card
           key={theme.id}
           className={`flex-1 cursor-pointer transition-all hover:shadow-md ${
@@ -21,7 +29,7 @@ export function ThemeSelector({ selectedTheme, onThemeSelect }: ThemeSelectorPro
           }`}
           onClick={() => onThemeSelect(theme.id)}
         >
-          <CardContent className="p-4">
+          <CardContent className="">
             <div className="space-y-4">
               {/* Theme Name */}
               <div>
@@ -60,13 +68,11 @@ export function ThemeSelector({ selectedTheme, onThemeSelect }: ThemeSelectorPro
               {/* Fonts */}
               <div className="space-y-3">
                 <div>
-                  <div className="text-sm text-gray-500 mb-2">Heading</div>
                   <div className={`text-lg font-bold ${getFontClass(theme.fontHeading)}`}>
                     {theme.fontHeading}
                   </div>
                 </div>
                 <div>
-                  <div className="text-sm text-gray-500 mb-2">Body</div>
                   <div className={`text-lg font-normal ${getFontClass(theme.fontBody)}`}>
                     {theme.fontBody}
                   </div>
@@ -90,6 +96,7 @@ export function ThemeSelector({ selectedTheme, onThemeSelect }: ThemeSelectorPro
           </CardContent>
         </Card>
       ))}
+      </div>
     </div>
   )
 } 

@@ -90,6 +90,12 @@ export default function WebsitePage() {
     console.log('Saving website data:', websiteData)
   }
 
+  const handleCustomThemeCreate = (customTheme: any) => {
+    console.log('Custom theme created:', customTheme)
+    // TODO: Add custom theme to the list or save to backend
+    alert(`Custom theme "${customTheme.name}" created successfully!`)
+  }
+
   return (
     <div className="flex flex-col gap-4 w-full">
       <div className="flex items-center justify-between">
@@ -107,17 +113,11 @@ export default function WebsitePage() {
 
       {/* Theme Selector */}
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Palette className="w-5 h-5" />
-            Choose Theme
-          </CardTitle>
-          <CardDescription>Select a theme for your website design</CardDescription>
-        </CardHeader>
         <CardContent>
           <ThemeSelector
             selectedTheme={websiteData.theme}
             onThemeSelect={(themeId) => handleInputChange('theme', themeId)}
+            onCustomThemeCreate={handleCustomThemeCreate}
           />
         </CardContent>
       </Card>

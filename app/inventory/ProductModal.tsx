@@ -2,15 +2,16 @@
 // ProductModal.tsx
 // anna 6/29/25
 // chapter street inc, 2025 ©
-// unified product modal for adding and editing
+// product modal component for adding/editing products
 //
 
-'use client';
+'use client'
 
-import { useState, useEffect } from 'react';
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { useState, useEffect } from 'react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
 import {
   Dialog,
   DialogContent,
@@ -19,17 +20,17 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog";
+} from '@/components/ui/dialog'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import ImageUpload from "./ImageUpload";
-import { Product } from "@/lib/types/product";
-import { Plus } from 'lucide-react';
+} from '@/components/ui/select'
+import { Product } from '@/lib/types/product'
+import ImageUpload from './ImageUpload'
+import { Plus } from 'lucide-react'
 
 interface ProductModalProps {
   mode: 'add' | 'edit';

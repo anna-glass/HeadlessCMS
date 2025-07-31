@@ -1,54 +1,69 @@
+//
+// HeroSection.tsx
+// anna 6/29/25
+// chapter street inc, 2025 ©
+// hero section component for website builder
+//
+
 'use client'
 
 import { useState } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Image as ImageIcon, Upload, X } from 'lucide-react'
+import { Upload, X } from 'lucide-react'
 import { WebsiteData } from '@/lib/types/website'
+import { Separator } from '@/components/ui/separator'
+import { Textarea } from '@/components/ui/textarea'
+import { uploadFileToS3, validateImageFile } from '@/lib/s3-upload'
 
-interface HeroSectionProps {
+interface HeroProps {
   hero_image_1: string
   hero_image_2: string
   hero_title: string
   hero_subtitle: string
   hero_cta: string
+  include_intro: boolean
+  intro_text: string
   onUpdate: (field: keyof WebsiteData, value: any) => void
 }
 
-export function HeroSection({ 
+export function Hero({ 
   hero_image_1, 
   hero_image_2, 
   hero_title, 
   hero_subtitle, 
-  hero_cta, 
+  hero_cta,
+  include_intro,
+  intro_text,
   onUpdate 
-}: HeroSectionProps) {
+}: HeroProps) {
   const [isUploading1, setIsUploading1] = useState(false)
   const [isUploading2, setIsUploading2] = useState(false)
 
-  const handleImageUpload = async (file: File, imageField: 'hero_image_1' | 'hero_image_2') => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, imageField: 'hero_image_1' | 'hero_image_2') => {
+    const file = e.target.files?.[0]
     if (!file) return
+
+    // Validate file using utility function
+    const validation = validateImageFile(file)
+    if (!validation.valid) {
+      alert(validation.error)
+      return
+    }
 
     const setIsUploading = imageField === 'hero_image_1' ? setIsUploading1 : setIsUploading2
     setIsUploading(true)
     
     try {
-      const formData = new FormData()
-      formData.append('file', file)
-
-      const response = await fetch('/api/upload', {
-        method: 'POST',
-        body: formData,
-      })
-
-      if (!response.ok) {
-        throw new Error('Upload failed')
+      const uploadResult = await uploadFileToS3(file)
+      
+      if (!uploadResult.success) {
+        throw new Error(uploadResult.error || 'Failed to upload image')
       }
 
-      const data = await response.json()
-      onUpdate(imageField, data.url)
+      onUpdate(imageField, uploadResult.publicFileUrl!)
     } catch (error) {
       console.error('Upload error:', error)
       alert('Failed to upload image')
@@ -57,22 +72,8 @@ export function HeroSection({
     }
   }
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, imageField: 'hero_image_1' | 'hero_image_2') => {
-    const file = e.target.files?.[0]
-    if (file) {
-      handleImageUpload(file, imageField)
-    }
-  }
-
   return (
     <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <ImageIcon className="w-5 h-5" />
-          Hero Section
-        </CardTitle>
-        <CardDescription>Customize your main hero section</CardDescription>
-      </CardHeader>
       <CardContent className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
@@ -84,7 +85,7 @@ export function HeroSection({
                     <img 
                       src={hero_image_1} 
                       alt="Hero Image 1" 
-                      className="h-24 w-32 object-cover border rounded-lg"
+                      className="h-20 w-20 object-cover border rounded-lg"
                     />
                     <Button
                       type="button"
@@ -96,16 +97,12 @@ export function HeroSection({
                       <X className="h-3 w-3" />
                     </Button>
                   </div>
-                  <div className="flex-1">
-                    <p className="text-sm text-muted-foreground">Current hero image 1</p>
-                    <p className="text-xs text-muted-foreground truncate">{hero_image_1}</p>
-                  </div>
                 </div>
               ) : (
                 <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
                   <Upload className="mx-auto h-8 w-8 text-gray-400 mb-2" />
                   <p className="text-sm text-gray-600 mb-2">Upload hero image 1</p>
-                  <p className="text-xs text-gray-500 mb-4">PNG, JPG, SVG up to 10MB</p>
+                  <p className="text-xs text-gray-500 mb-4">PNG, JPG up to 2MB</p>
                   <Button
                     type="button"
                     variant="outline"
@@ -120,7 +117,7 @@ export function HeroSection({
                 id="hero-image-1-upload"
                 type="file"
                 accept="image/*"
-                onChange={(e) => handleFileChange(e, 'hero_image_1')}
+                onChange={(e) => handleImageUpload(e, 'hero_image_1')}
                 className="hidden"
               />
             </div>
@@ -134,7 +131,7 @@ export function HeroSection({
                     <img 
                       src={hero_image_2} 
                       alt="Hero Image 2" 
-                      className="h-24 w-32 object-cover border rounded-lg"
+                      className="h-20 w-20 object-cover border rounded-lg"
                     />
                     <Button
                       type="button"
@@ -146,16 +143,12 @@ export function HeroSection({
                       <X className="h-3 w-3" />
                     </Button>
                   </div>
-                  <div className="flex-1">
-                    <p className="text-sm text-muted-foreground">Current hero image 2</p>
-                    <p className="text-xs text-muted-foreground truncate">{hero_image_2}</p>
-                  </div>
                 </div>
               ) : (
                 <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
                   <Upload className="mx-auto h-8 w-8 text-gray-400 mb-2" />
                   <p className="text-sm text-gray-600 mb-2">Upload hero image 2 (optional)</p>
-                  <p className="text-xs text-gray-500 mb-4">PNG, JPG, SVG up to 10MB</p>
+                  <p className="text-xs text-gray-500 mb-4">PNG, JPG up to 2MB</p>
                   <Button
                     type="button"
                     variant="outline"
@@ -170,7 +163,7 @@ export function HeroSection({
                 id="hero-image-2-upload"
                 type="file"
                 accept="image/*"
-                onChange={(e) => handleFileChange(e, 'hero_image_2')}
+                onChange={(e) => handleImageUpload(e, 'hero_image_2')}
                 className="hidden"
               />
             </div>
@@ -201,6 +194,19 @@ export function HeroSection({
             value={hero_cta}
             onChange={(e) => onUpdate('hero_cta', e.target.value)}
             placeholder="Shop Now"
+          />
+        </div>
+
+        <Separator />
+
+        <div className="space-y-2">
+          <Label htmlFor="intro_text">Intro Text</Label>
+          <Textarea
+            id="intro_text"
+            value={intro_text}
+            onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => onUpdate('intro_text', e.target.value)}
+            placeholder="Enter intro text"
+            rows={4}
           />
         </div>
       </CardContent>

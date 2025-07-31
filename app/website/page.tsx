@@ -1,21 +1,25 @@
+//
+// website/page.tsx
+// anna 6/29/25
+// chapter street inc, 2025 ©
+// website builder page
+//
+
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { WebsiteData } from '@/lib/types/website'
 import { ThemeSelector } from '@/components/theme-selector'
 import { Globe } from 'lucide-react'
-import {
-  NavigationSection,
-  HeroSection,
-  IntroSection,
-  EmailListSection,
-  BlogPostsSection,
-  FooterSection,
-  SocialLinksSection
-} from './components'
+import { Navigation } from './Navigation'
+import { Hero } from './Hero'
+import { BlogPosts } from './BlogPosts'
+import { Footer } from './Footer'
+import { Switch } from '@/components/ui/switch'
+import { CustomThemeModal } from '@/components/custom-theme-modal'
 
 // Default website data
 const defaultWebsiteData: WebsiteData = {
@@ -23,62 +27,34 @@ const defaultWebsiteData: WebsiteData = {
   theme: "slate",
   
   // Navigation
-  announcement: "Drop 1 coming August 15th",
-  logo: "/airlet.svg",
-  navigation_items: [
-    { label: "Home", slug: "/" },
-    { label: "Shop", slug: "/shop" },
-    { label: "About", slug: "/about" },
-    { label: "Contact", slug: "/contact" }
-  ],
+  announcement: "",
+  logo: "",
+  navigation_items: [],
   
   // Hero
-  hero_image_1: "/hero-image-1.png",
-  hero_image_2: "/hero-image-2.png",
-  hero_title: "Bag charms made in drops",
-  hero_subtitle: "Inspired by the quiet beauty of Northern California",
-  hero_cta: "Shop Now",
+  hero_image_1: "",
+  hero_image_2: "",
+  hero_title: "",
+  hero_subtitle: "",
+  hero_cta: "",
   
   // Intro
   include_intro: true,
-  intro_text: "Airlets are custom bag charms rooted in a moment - An Airbnb in Copenhagen. Fog settling in on the Central Coast. A glass of red at the neighborhood wine bar. Some are polished. Some raw. Each one made with care, and only once.",
+  intro_text: "",
   
   // Blog Posts
   include_blog: true,
-  blog_posts: [
-    {
-      title: "Meet our signature scent",
-      image: "/post-1.jpg",
-      body: "Soft start is a clean floral with worn-in softness, inspired by damp mornings, lip gloss on mugs, and friends laughing in the kitchen.",
-      slug: "meet-our-signature-scent"
-    },
-    {
-      title: "Talismans, Not Accessories",
-      image: "/post-2.jpg",
-      body: "Airlets aren't just charms, they're anchors. For mood. For scent. For self. Small enough to forget. Meaningful enough to carry.",
-      slug: "talismans-not-accessories"
-    },
-    {
-      title: "Why I Started Airlet",
-      image: "/post-3.jpg",
-      body: "I've always loved the kinds of things you hold, carry, or keep without thinking. Things that are worn, gifted, forgotten, found again.",
-      slug: "why-i-started-airlet"
-    }
-  ],
+  blog_posts: [],
   
   // Email List
   include_email_list: true,
-  email_list_title: "Stay in the loop",
-  email_list_cta: "Subscribe",
+  email_list_title: "",
+  email_list_cta: "",
   
   // Footer
-  social_links: ["Instagram", "Facebook", "Pinterest"],
+  social_links: [],
   footer_items: [
-    { label: "Our Story", slug: "/story" },
-    { label: "Our Mission", slug: "/mission" },
-    { label: "Our Team", slug: "/team" },
-    { label: "Our Blog", slug: "/blog" },
-    { label: "Contact Us", slug: "/contact" },
+    { label: "Contact", slug: "/contact" },
     { label: "Privacy Policy", slug: "/privacy" },
     { label: "Terms of Service", slug: "/terms" }
   ]
@@ -86,6 +62,32 @@ const defaultWebsiteData: WebsiteData = {
 
 export default function WebsitePage() {
   const [websiteData, setWebsiteData] = useState<WebsiteData>(defaultWebsiteData)
+  const [isLoading, setIsLoading] = useState(true)
+  const [isSaving, setIsSaving] = useState(false)
+
+  // Load website data on mount
+  useEffect(() => {
+    loadWebsiteData()
+  }, [])
+
+  const loadWebsiteData = async () => {
+    try {
+      const response = await fetch('/api/website')
+      if (response.ok) {
+        const data = await response.json()
+        setWebsiteData(data)
+      } else if (response.status === 404) {
+        // No website found, use default data
+        console.log('No website found, using default data')
+      } else {
+        console.error('Failed to load website data')
+      }
+    } catch (error) {
+      console.error('Error loading website data:', error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   const handleInputChange = (field: keyof WebsiteData, value: any) => {
     setWebsiteData(prev => ({
@@ -104,14 +106,48 @@ export default function WebsitePage() {
   }
 
   const handleSave = async () => {
-    // TODO: Implement save functionality to backend
-    console.log('Saving website data:', websiteData)
+    setIsSaving(true)
+    try {
+      const response = await fetch('/api/website', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(websiteData),
+      })
+
+      if (response.ok) {
+        const result = await response.json()
+        console.log('Website data saved successfully:', result)
+        // You could show a success toast here
+      } else {
+        const error = await response.json()
+        console.error('Failed to save website data:', error)
+        // You could show an error toast here
+      }
+    } catch (error) {
+      console.error('Error saving website data:', error)
+      // You could show an error toast here
+    } finally {
+      setIsSaving(false)
+    }
   }
 
   const handleCustomThemeCreate = (customTheme: any) => {
     console.log('Custom theme created:', customTheme)
     // TODO: Add custom theme to the list or save to backend
     alert(`Custom theme "${customTheme.name}" created successfully!`)
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading website data...</p>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -123,80 +159,95 @@ export default function WebsitePage() {
             Customize your ecommerce website settings and content
           </p>
         </div>
-        <Button onClick={handleSave} className="flex items-center gap-2">
+        <Button onClick={handleSave} disabled={isSaving} className="flex items-center gap-2">
           <Globe className="w-4 h-4" />
-          Save Changes
+          {isSaving ? 'Saving...' : 'Save Changes'}
         </Button>
       </div>
 
       {/* Theme Selector */}
-      <Card>
-        <CardContent>
-          <ThemeSelector
-            selectedTheme={websiteData.theme}
-            onThemeSelect={(themeId) => handleInputChange('theme', themeId)}
-            onCustomThemeCreate={handleCustomThemeCreate}
-          />
-        </CardContent>
-      </Card>
-
-      <div className="grid gap-6 md:grid-cols-2">
-        {/* Navigation */}
-        <NavigationSection
-          announcement={websiteData.announcement}
-          logo={websiteData.logo}
-          navigation_items={websiteData.navigation_items}
-          onUpdate={handleInputChange}
-        />
-
-        {/* Hero Section */}
-        <HeroSection
-          hero_image_1={websiteData.hero_image_1}
-          hero_image_2={websiteData.hero_image_2}
-          hero_title={websiteData.hero_title}
-          hero_subtitle={websiteData.hero_subtitle}
-          hero_cta={websiteData.hero_cta}
-          onUpdate={handleInputChange}
-        />
-
-        {/* Intro Section */}
-        <IntroSection
-          include_intro={websiteData.include_intro}
-          intro_text={websiteData.intro_text}
-          onUpdate={handleInputChange}
-        />
-
-        {/* Email List */}
-        <EmailListSection
-          include_email_list={websiteData.include_email_list}
-          email_list_title={websiteData.email_list_title}
-          email_list_cta={websiteData.email_list_cta}
-          onUpdate={handleInputChange}
-        />
+      <div>
+        <div className="flex flex-row justify-between items-center">
+          <h2 className="text-2xl font-semibold pt-6 mb-4">Choose Theme</h2>
+          <CustomThemeModal onThemeCreate={handleCustomThemeCreate} />
+        </div>
+        <Card>
+          <CardContent>
+            <ThemeSelector
+              selectedTheme={websiteData.theme}
+              onThemeSelect={(themeId) => handleInputChange('theme', themeId)}
+            />
+          </CardContent>
+        </Card>
       </div>
 
-      <Separator />
+      <div className="flex flex-col gap-6">
+        {/* Navigation */}
+        <div>
+          <h2 className="text-2xl font-semibold pt-6 mb-4">Navigation</h2>
+          <Navigation
+            announcement={websiteData.announcement}
+            logo={websiteData.logo}
+            navigation_items={websiteData.navigation_items}
+            onUpdate={handleInputChange}
+          />
+        </div>
 
-      {/* Blog Posts */}
-      <BlogPostsSection
-        include_blog={websiteData.include_blog}
-        blog_posts={websiteData.blog_posts}
-        onUpdate={handleInputChange}
-      />
+        {/* Hero Section */}
+        <div>
+          <div className="flex flex-row justify-between items-center">
+            <h2 className="text-2xl font-semibold pt-6 mb-4">Hero Section</h2>
+            <Switch
+              checked={websiteData.include_intro}
+              onCheckedChange={(checked) => handleInputChange('include_intro', checked)}
+            />
+          </div>
+          <Hero
+            hero_image_1={websiteData.hero_image_1}
+            hero_image_2={websiteData.hero_image_2}
+            hero_title={websiteData.hero_title}
+            hero_subtitle={websiteData.hero_subtitle}
+            hero_cta={websiteData.hero_cta}
+            include_intro={websiteData.include_intro}
+            intro_text={websiteData.intro_text}
+            onUpdate={handleInputChange}
+          />
+        </div>
 
-      <Separator />
+        {/* Blog Posts */}
+        <div>
+          <div className="flex flex-row justify-between items-center">
+            <h2 className="text-2xl font-semibold pt-6 mb-4">Blog Posts</h2>
+            <Switch
+              checked={websiteData.include_blog}
+              onCheckedChange={(checked) => handleInputChange('include_blog', checked)}
+            />
+          </div>
+          <BlogPosts
+            include_blog={websiteData.include_blog}
+            blog_posts={websiteData.blog_posts}
+            onUpdate={handleInputChange}
+          />
+        </div>
 
-      {/* Footer */}
-      <div className="grid gap-6 md:grid-cols-2">
-        <FooterSection
-          footer_items={websiteData.footer_items}
-          onUpdate={handleInputChange}
-        />
-
-        <SocialLinksSection
-          social_links={websiteData.social_links}
-          onUpdate={handleInputChange}
-        />
+        {/* Footer */}
+        <div>
+          <div className="flex flex-row justify-between items-center">
+            <h2 className="text-2xl font-semibold pt-6 mb-4">Footer</h2>
+            <Switch
+              checked={websiteData.include_email_list}
+              onCheckedChange={(checked) => handleInputChange('include_email_list', checked)}
+            />
+          </div>
+          <Footer
+            footer_items={websiteData.footer_items}
+            social_links={websiteData.social_links}
+            include_email_list={websiteData.include_email_list}
+            email_list_title={websiteData.email_list_title}
+            email_list_cta={websiteData.email_list_cta}
+            onUpdate={handleInputChange}
+          />
+        </div>
       </div>
     </div>
   )

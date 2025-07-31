@@ -1,3 +1,10 @@
+//
+// dashboard/page.tsx
+// anna 6/29/25
+// chapter street inc, 2025 ©
+// dashboard page
+//
+
 import SignInPage from "../signin/page";
 import { stackServerApp } from "../stack";
 import Dashboard from "./Dashboard";

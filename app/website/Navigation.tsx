@@ -1,86 +1,72 @@
+//
+// NavigationSection.tsx
+// anna 6/29/25
+// chapter street inc, 2025 ©
+// navigation section component for website builder
+//
+
 'use client'
 
 import { useState } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Link, Upload, X } from 'lucide-react'
+import { Upload, X } from 'lucide-react'
 import { WebsiteData } from '@/lib/types/website'
-
-// Utility function to generate slugs
-const generateSlug = (text: string): string => {
-  return text
-    .toLowerCase()
-    .replace(/[^a-z0-9\s-]/g, '') // Remove special characters
-    .replace(/\s+/g, '-') // Replace spaces with hyphens
-    .replace(/-+/g, '-') // Replace multiple hyphens with single
-    .trim()
-}
+import { uploadFileToS3, validateImageFile } from '@/lib/s3-upload'
+import { generateSlug } from '@/lib/utils'
 
 interface NavigationItem {
   label: string
   slug: string
 }
 
-interface NavigationSectionProps {
+interface NavigationProps {
   announcement: string
   logo: string
   navigation_items: NavigationItem[]
   onUpdate: (field: keyof WebsiteData, value: any) => void
 }
 
-export function NavigationSection({ 
+export function Navigation({ 
   announcement, 
   logo, 
   navigation_items, 
   onUpdate 
-}: NavigationSectionProps) {
+}: NavigationProps) {
   const [isUploading, setIsUploading] = useState(false)
 
-  const handleImageUpload = async (file: File) => {
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
     if (!file) return
+
+    // Validate file using utility function
+    const validation = validateImageFile(file)
+    if (!validation.valid) {
+      alert(validation.error)
+      return
+    }
 
     setIsUploading(true)
     try {
-      const formData = new FormData()
-      formData.append('file', file)
-
-      const response = await fetch('/api/upload', {
-        method: 'POST',
-        body: formData,
-      })
-
-      if (!response.ok) {
-        throw new Error('Upload failed')
+      const uploadResult = await uploadFileToS3(file)
+      
+      if (!uploadResult.success) {
+        throw new Error(uploadResult.error || 'Failed to upload logo')
       }
 
-      const data = await response.json()
-      onUpdate('logo', data.url)
+      onUpdate('logo', uploadResult.publicFileUrl!)
     } catch (error) {
       console.error('Upload error:', error)
-      alert('Failed to upload image')
+      alert('Failed to upload logo')
     } finally {
       setIsUploading(false)
     }
   }
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (file) {
-      handleImageUpload(file)
-    }
-  }
-
   return (
     <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Link className="w-5 h-5" />
-          Navigation
-        </CardTitle>
-        <CardDescription>Customize your site navigation</CardDescription>
-      </CardHeader>
       <CardContent className="space-y-4">
         <div className="space-y-2">
           <Label htmlFor="announcement">Announcement Text</Label>
@@ -112,16 +98,12 @@ export function NavigationSection({
                     <X className="h-3 w-3" />
                   </Button>
                 </div>
-                <div className="flex-1">
-                  <p className="text-sm text-muted-foreground">Current logo</p>
-                  <p className="text-xs text-muted-foreground truncate">{logo}</p>
-                </div>
               </div>
             ) : (
               <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
                 <Upload className="mx-auto h-8 w-8 text-gray-400 mb-2" />
                 <p className="text-sm text-gray-600 mb-2">Upload your logo</p>
-                <p className="text-xs text-gray-500 mb-4">PNG, JPG, SVG up to 5MB</p>
+                <p className="text-xs text-gray-500 mb-4">PNG, JPG up to 2MB</p>
                 <Button
                   type="button"
                   variant="outline"
@@ -136,7 +118,7 @@ export function NavigationSection({
               id="logo-upload"
               type="file"
               accept="image/*"
-              onChange={handleFileChange}
+              onChange={handleLogoUpload}
               className="hidden"
             />
           </div>

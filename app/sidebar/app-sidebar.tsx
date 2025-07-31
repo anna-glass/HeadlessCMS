@@ -1,6 +1,13 @@
+//
+// app-sidebar.tsx
+// anna 6/29/25
+// chapter street inc, 2025 ©
+// main app sidebar component
+//
+
 'use client'
 
-import { Home, Package, Edit, BarChart3, Globe } from "lucide-react"
+import { Home, Package, Edit, BarChart3, Globe, FileText } from "lucide-react"
 import { useState } from "react"
 
 import {
@@ -19,7 +26,7 @@ import {
 import Image from "next/image"
 import { UserButton } from '@stackframe/stack';
 import { Organization } from "@/lib/types/organization";
-import { OrganizationEditModal } from "./organization-edit-modal";
+import { OrganizationEditModal } from "@/app/sidebar/organization-edit-modal";
 
 // Menu items.
 const items = [
@@ -37,6 +44,11 @@ const items = [
     title: "Website",
     url: "/website",
     icon: Globe,
+  },
+  {
+    title: "Blog Posts",
+    url: "/blog-posts",
+    icon: FileText,
   },
 ]
 
@@ -118,4 +130,4 @@ export function AppSidebar({ organization }: AppSidebarProps) {
       </SidebarFooter>
     </Sidebar>
   )
-}
+} 

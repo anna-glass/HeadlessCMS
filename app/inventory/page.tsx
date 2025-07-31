@@ -1,8 +1,15 @@
+//
+// inventory/page.tsx
+// anna 6/29/25
+// chapter street inc, 2025 ©
+// inventory management page
+//
+
 import SignInPage from "../signin/page";
 import { stackServerApp } from "../stack";
 import Inventory from "./Inventory";
 import { redirect } from "next/navigation";
-import { checkUserOrganization } from "@/lib/check-organization";
+import { checkUserOrganization } from "@/lib/utils";
 import { sql } from "@/lib/db";
 import { Product } from "@/lib/types/product";
 

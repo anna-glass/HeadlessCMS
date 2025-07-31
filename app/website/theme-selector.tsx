@@ -3,23 +3,16 @@
 import { Card, CardContent } from '@/components/ui/card'
 import { themes, Theme } from '@/lib/types/theme'
 import { getFontClass } from '@/lib/fonts'
-import { CustomThemeModal } from './custom-theme-modal'
 import { Check } from 'lucide-react'
 
 interface ThemeSelectorProps {
   selectedTheme: string
   onThemeSelect: (themeId: string) => void
-  onCustomThemeCreate?: (theme: any) => void
 }
 
-export function ThemeSelector({ selectedTheme, onThemeSelect, onCustomThemeCreate }: ThemeSelectorProps) {
+export function ThemeSelector({ selectedTheme, onThemeSelect }: ThemeSelectorProps) {
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold">Choose Theme</h3>
-        <CustomThemeModal onThemeCreate={onCustomThemeCreate || (() => {})} />
-      </div>
-      
       <div className="flex flex-row w-full gap-4">
         {themes.map((theme) => (
         <Card

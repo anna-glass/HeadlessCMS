@@ -1,4 +1,10 @@
+//
 // Inventory.tsx
+// anna 6/29/25
+// chapter street inc, 2025 ©
+// inventory management component
+//
+
 'use client'
 
 import { useState } from "react";
@@ -257,7 +263,3 @@ export async function deleteProduct(id: string) {
 
     if (!res.ok) throw new Error('Failed to delete product');
 }
-
-
-  
-  

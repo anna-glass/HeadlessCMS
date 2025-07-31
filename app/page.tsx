@@ -6,10 +6,10 @@
 //
 
 import { stackServerApp } from "./stack";
-import ChatPage from "./chat/page";
 import SignInPage from "./signin/page";
 import { redirect } from "next/navigation";
-import { checkUserOrganization } from "@/lib/check-organization";
+import { checkUserOrganization } from "@/lib/utils";
+import InventoryPage from "./inventory/page";
 
 export default async function Home() {
   const user = await stackServerApp.getUser();
@@ -26,6 +26,6 @@ export default async function Home() {
     redirect('/onboarding');
   }
 
-  return <ChatPage />;
+  return <InventoryPage />;
 }
 

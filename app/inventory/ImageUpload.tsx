@@ -20,7 +20,6 @@ interface ImageUploadProps {
 }
 
 export default function ImageUpload({ images, onChange }: ImageUploadProps) {
-  const [isDragOver, setIsDragOver] = useState(false);
   const [uploadingFiles, setUploadingFiles] = useState<Set<string>>(new Set());
 
   const handleFileSelect = useCallback(async (files: FileList | null) => {
@@ -66,22 +65,6 @@ export default function ImageUpload({ images, onChange }: ImageUploadProps) {
     }
   }, [images, onChange]);
 
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragOver(false);
-    handleFileSelect(e.dataTransfer.files);
-  }, [handleFileSelect]);
-
-  const handleDragOver = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragOver(true);
-  }, []);
-
-  const handleDragLeave = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragOver(false);
-  }, []);
-
   const removeImage = (index: number) => {
     const newImages = images.filter((_, i) => i !== index);
     onChange(newImages);
@@ -90,18 +73,8 @@ export default function ImageUpload({ images, onChange }: ImageUploadProps) {
   return (
     <div className="space-y-4">
       <Label>Product Images</Label>
-      
       {/* Upload Area */}
-      <div
-        className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
-          isDragOver 
-            ? 'border-primary bg-primary/5' 
-            : 'border-muted-foreground/25 hover:border-muted-foreground/50'
-        }`}
-        onDrop={handleDrop}
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-      >
+      <div className="border-2 border-dashed rounded-lg p-6 text-center">
         {uploadingFiles.size > 0 ? (
           <>
             <Loader2 className="mx-auto h-8 w-8 text-muted-foreground mb-2 animate-spin" />
@@ -121,7 +94,7 @@ export default function ImageUpload({ images, onChange }: ImageUploadProps) {
           <>
             <Upload className="mx-auto h-8 w-8 text-muted-foreground mb-2" />
             <p className="text-sm text-muted-foreground mb-2">
-              Drag and drop images here, or click to select
+              Click to select images
             </p>
             <Button
               type="button"

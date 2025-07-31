@@ -28,7 +28,7 @@ export default function RootLayout({
                 <SidebarWrapper />
                 <main className="flex flex-1 flex-col p-4">
                   <SidebarTrigger className="mb-4 self-start" />
-                  <div className="flex flex-1 w-full">
+                  <div className="flex flex-1 min-w-full">
                     {children}
                   </div>
                 </main>

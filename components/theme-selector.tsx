@@ -39,27 +39,27 @@ export function ThemeSelector({ selectedTheme, onThemeSelect, onCustomThemeCreat
               {/* Color Palette */}
               <div className="flex gap-1">
                 <div 
-                  className="w-6 h-6 rounded-sm border border-gray-200"
+                  className="w-12 h-12 rounded-sm border border-gray-200"
                   style={{ backgroundColor: theme.colorPrimary }}
                   title="Primary"
                 />
                 <div 
-                  className="w-6 h-6 rounded-sm border border-gray-200"
+                  className="w-12 h-12 rounded-sm border border-gray-200"
                   style={{ backgroundColor: theme.colorSecondary }}
                   title="Secondary"
                 />
                 <div 
-                  className="w-6 h-6 rounded-sm border border-gray-200"
+                  className="w-12 h-12 rounded-sm border border-gray-200"
                   style={{ backgroundColor: theme.colorTertiary }}
                   title="Tertiary"
                 />
                 <div 
-                  className="w-6 h-6 rounded-sm border border-gray-200"
+                  className="w-12 h-12 rounded-sm border border-gray-200"
                   style={{ backgroundColor: theme.colorLight }}
                   title="Light"
                 />
                 <div 
-                  className="w-6 h-6 rounded-sm border border-gray-200"
+                  className="w-12 h-12 rounded-sm border border-gray-200"
                   style={{ backgroundColor: theme.colorDark }}
                   title="Dark"
                 />

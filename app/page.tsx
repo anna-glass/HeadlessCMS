@@ -5,7 +5,7 @@
 // home page
 //
 
-import { stackServerApp } from "../stack";
+import { stackServerApp } from "./stack";
 import SignInPage from "./signin/page";
 import { redirect } from "next/navigation";
 import { checkUserOrganization } from "@/lib/check-organization";
@@ -23,7 +23,7 @@ export default async function Home() {
   
   if (!organization) {
     // User doesn't have an organization, redirect to onboarding
-    redirect('/admin/onboarding');
+    redirect('/onboarding');
   }
 
   return <InventoryPage />;

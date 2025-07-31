@@ -6,7 +6,7 @@
 //
 
 import SignInPage from "../signin/page";
-import { stackServerApp } from "../../stack";
+import { stackServerApp } from "../stack";
 import Inventory from "./Inventory";
 import { redirect } from "next/navigation";
 import { checkUserOrganization } from "@/lib/check-organization";
@@ -25,7 +25,7 @@ export default async function InventoryPage() {
   
   if (!organization) {
     // User doesn't have an organization, redirect to onboarding
-    redirect('/admin/onboarding');
+    redirect('/onboarding');
   }
 
   // Fetch products for this user's organization

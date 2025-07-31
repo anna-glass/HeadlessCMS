@@ -25,22 +25,22 @@ import { OrganizationEditModal } from "@/components/organization-edit-modal";
 const items = [
   {
     title: "Dashboard",
-    url: "/admin/dashboard",
+    url: "/dashboard",
     icon: BarChart3,
   },
   {
     title: "Inventory",
-    url: "/admin/inventory",
+    url: "/inventory",
     icon: Package,
   },
   {
     title: "Website",
-    url: "/admin/website",
+    url: "/website",
     icon: Globe,
   },
   {
     title: "Blog Posts",
-    url: "/admin/blog-posts",
+    url: "/blog-posts",
     icon: FileText,
   },
 ]

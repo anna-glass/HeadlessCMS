@@ -1,6 +1,6 @@
 'use client'
 
-import { Home, Package, Edit } from "lucide-react"
+import { Home, Package, Edit, BarChart3 } from "lucide-react"
 import { useState } from "react"
 
 import {
@@ -24,9 +24,9 @@ import { OrganizationEditModal } from "./organization-edit-modal";
 // Menu items.
 const items = [
   {
-    title: "Home",
-    url: "/",
-    icon: Home,
+    title: "Dashboard",
+    url: "/dashboard",
+    icon: BarChart3,
   },
   {
     title: "Inventory",

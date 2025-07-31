@@ -36,6 +36,8 @@ export interface BlogPost {
   image: string;
   body: string;
   slug: string;
+  created_at?: string;
+  is_published?: boolean;
 }
 
 // Email List Section Types

@@ -126,6 +126,7 @@ export default function Inventory({ initialData }: { initialData: Product[] }) {
               <TableHead>Description</TableHead>
               <TableHead>Price</TableHead>
               <TableHead>Stock</TableHead>
+              <TableHead>Tags</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Created At</TableHead>
               <TableHead>Actions</TableHead>
@@ -162,8 +163,24 @@ export default function Inventory({ initialData }: { initialData: Product[] }) {
                 </TableCell>
                 <TableCell>{product.name}</TableCell>
                 <TableCell>{product.description}</TableCell>
-                <TableCell>{product.price}</TableCell>
+                <TableCell>${(product.price / 100).toFixed(2)}</TableCell>
                 <TableCell>{product.stock}</TableCell>
+                <TableCell>
+                  {product.tags && product.tags.length > 0 ? (
+                    <div className="flex flex-wrap gap-1">
+                      {product.tags.map((tag, index) => (
+                        <span
+                          key={index}
+                          className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+                        >
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  ) : (
+                    <span className="text-muted-foreground text-sm">No tags</span>
+                  )}
+                </TableCell>
                 <TableCell>
                   <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusStyle(product.status)}`}>
                     {product.status}
@@ -236,7 +253,7 @@ export default function Inventory({ initialData }: { initialData: Product[] }) {
             ))}
             {filteredProducts.length === 0 && (
               <TableRow>
-                <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
+                <TableCell colSpan={9} className="text-center text-muted-foreground py-8">
                   {globalFilter ? 'No products found matching your search.' : 'No products yet. Click "Add Product" to get started.'}
                 </TableCell>
               </TableRow>

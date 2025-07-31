@@ -28,9 +28,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Product } from '@/lib/types/product'
+import { Product, ProductSettings } from '@/lib/types/product'
 import ImageUpload from './ImageUpload'
-import { Plus } from 'lucide-react'
+import { Plus, X } from 'lucide-react'
 
 interface ProductModalProps {
   mode: 'add' | 'edit';
@@ -53,29 +53,55 @@ export default function ProductModal({
 }: ProductModalProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [productSettings, setProductSettings] = useState<ProductSettings | null>(null);
+  const [tagInput, setTagInput] = useState('');
   const [formData, setFormData] = useState({
     name: '',
     description: '',
-    price: 0,
+    price: 0, // stored in cents
+    priceDisplay: '', // for dollar/cents input
     stock: 0,
     status: 'draft' as 'draft' | 'scheduled' | 'live' | 'sold' | 'archived',
-    images: [] as string[]
+    images: [] as string[],
+    tags: [] as string[]
   });
 
   // Use controlled or uncontrolled open state
   const modalOpen = open !== undefined ? open : isOpen;
   const setModalOpen = onOpenChange || setIsOpen;
 
+  // Load product settings
+  useEffect(() => {
+    const loadProductSettings = async () => {
+      try {
+        const response = await fetch('/api/products/settings');
+        if (response.ok) {
+          const settings = await response.json();
+          setProductSettings(settings);
+        }
+      } catch (error) {
+        console.error('Error loading product settings:', error);
+      }
+    };
+
+    if (modalOpen) {
+      loadProductSettings();
+    }
+  }, [modalOpen]);
+
   // Update form data when product changes (for edit mode)
   useEffect(() => {
     if (mode === 'edit' && product) {
+      const priceInDollars = (product.price / 100).toFixed(2);
       setFormData({
         name: product.name,
         description: product.description,
         price: product.price,
+        priceDisplay: priceInDollars,
         stock: product.stock,
         status: product.status,
-        images: product.images
+        images: product.images,
+        tags: product.tags || []
       });
     } else if (mode === 'add') {
       // Reset form for add mode
@@ -83,9 +109,11 @@ export default function ProductModal({
         name: '',
         description: '',
         price: 0,
+        priceDisplay: '',
         stock: 0,
         status: 'draft',
-        images: []
+        images: [],
+        tags: []
       });
     }
   }, [mode, product]);
@@ -95,6 +123,46 @@ export default function ProductModal({
       ...prev,
       [field]: value
     }));
+  };
+
+  const handlePriceChange = (value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      priceDisplay: value
+    }));
+
+    // Convert dollar amount to cents
+    const dollars = parseFloat(value) || 0;
+    const cents = Math.round(dollars * 100);
+    setFormData(prev => ({
+      ...prev,
+      price: cents
+    }));
+  };
+
+  const addTag = (tag: string) => {
+    const trimmedTag = tag.trim();
+    if (trimmedTag && !formData.tags.includes(trimmedTag)) {
+      setFormData(prev => ({
+        ...prev,
+        tags: [...prev.tags, trimmedTag]
+      }));
+      setTagInput('');
+    }
+  };
+
+  const removeTag = (tagToRemove: string) => {
+    setFormData(prev => ({
+      ...prev,
+      tags: prev.tags.filter(tag => tag !== tagToRemove)
+    }));
+  };
+
+  const handleTagInputKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      addTag(tagInput);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -147,7 +215,7 @@ export default function ProductModal({
   return (
     <Dialog open={modalOpen} onOpenChange={setModalOpen}>
       {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>
@@ -168,22 +236,24 @@ export default function ProductModal({
             </div>
             <div className="grid gap-2">
               <Label htmlFor="description">Description</Label>
-              <Input
+              <Textarea
                 id="description"
                 value={formData.description}
                 onChange={(e) => handleInputChange('description', e.target.value)}
                 placeholder="Enter product description"
+                rows={3}
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="price">Price (in cents) *</Label>
+              <Label htmlFor="price">Price (in dollars) *</Label>
               <Input
                 id="price"
                 type="number"
                 min="0"
-                value={formData.price}
-                onChange={(e) => handleInputChange('price', parseInt(e.target.value) || 0)}
-                placeholder="0"
+                step="0.01"
+                value={formData.priceDisplay}
+                onChange={(e) => handlePriceChange(e.target.value)}
+                placeholder="0.00"
                 required
               />
             </div>
@@ -199,6 +269,72 @@ export default function ProductModal({
                 required
               />
             </div>
+            
+            {/* Tags Section */}
+            <div className="grid gap-2">
+              <Label htmlFor="tags">Tags</Label>
+              <div className="space-y-2">
+                <div className="flex gap-2">
+                  <Input
+                    id="tags"
+                    value={tagInput}
+                    onChange={(e) => setTagInput(e.target.value)}
+                    onKeyDown={handleTagInputKeyDown}
+                    placeholder="Type a tag and press Enter"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => addTag(tagInput)}
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
+                
+                {/* Available tags suggestions */}
+                {productSettings?.available_tags && productSettings.available_tags.length > 0 && (
+                  <div className="flex flex-wrap gap-1">
+                    {productSettings.available_tags
+                      .filter(tag => !formData.tags.includes(tag))
+                      .map(tag => (
+                        <Button
+                          key={tag}
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => addTag(tag)}
+                          className="text-xs"
+                        >
+                          {tag}
+                        </Button>
+                      ))}
+                  </div>
+                )}
+                
+                {/* Selected tags */}
+                {formData.tags.length > 0 && (
+                  <div className="flex flex-wrap gap-1">
+                    {formData.tags.map(tag => (
+                      <div
+                        key={tag}
+                        className="flex items-center gap-1 bg-blue-100 text-blue-800 px-2 py-1 rounded-md text-sm"
+                      >
+                        <span>{tag}</span>
+                        <button
+                          type="button"
+                          onClick={() => removeTag(tag)}
+                          className="text-blue-600 hover:text-blue-800"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
             {isEditMode && (
               <div className="grid gap-2">
                 <Label htmlFor="status">Status</Label>

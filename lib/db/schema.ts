@@ -40,9 +40,22 @@ CREATE TABLE products (
   price INTEGER NOT NULL, -- stored in cents
   stock INTEGER NOT NULL DEFAULT 0,
   images TEXT[], -- array of image URLs
+  tags TEXT[], -- array of product tags
   status TEXT NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'scheduled', 'live', 'sold', 'archived')),
   created_at TIMESTAMPTZ DEFAULT now(),
   updated_at TIMESTAMPTZ DEFAULT now()
+);
+*/
+
+// SQL schema for product_settings table:
+/*
+CREATE TABLE product_settings (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+    available_tags TEXT[] DEFAULT '{}',
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    UNIQUE (organization_id)
 );
 */
 

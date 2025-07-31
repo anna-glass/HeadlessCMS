@@ -168,7 +168,7 @@ export default function WebsitePage() {
       {/* Theme Selector */}
       <div>
         <div className="flex flex-row justify-between items-center">
-          <h2 className="text-2xl font-semibold pt-6 mb-4">Choose Theme</h2>
+          <h2 className="text-2xl font-semibold pt-6 mb-4">Theme</h2>
           <CustomThemeModal onThemeCreate={handleCustomThemeCreate} />
         </div>
         <Card>

@@ -13,6 +13,7 @@ export interface Product {
   price: number; // stored in cents
   stock: number;
   images: string[];
+  tags: string[]; // array of product tags
   status: "draft" | "scheduled" | "live" | "sold" | "archived";
   created_at: string;
   updated_at: string;
@@ -21,26 +22,35 @@ export interface Product {
 export interface CreateProductRequest {
   name: string;
   description?: string;
-  price?: number;
+  price?: number; // in cents
   stock?: number;
   images?: string[];
+  tags?: string[];
   status?: "draft" | "scheduled" | "live" | "sold" | "archived"; // Optional for API, but always set to 'draft' for new products
 }
 
 export interface UpdateProductRequest {
   name?: string;
   description?: string;
-  price?: number;
+  price?: number; // in cents
   stock?: number;
   images?: string[];
+  tags?: string[];
   status?: "draft" | "scheduled" | "live" | "sold" | "archived";
 }
 
-export interface UpdateProductRequest {
-  name?: string;
-  description?: string;
-  price?: number;
-  stock?: number;
-  images?: string[];
-  status?: "draft" | "scheduled" | "live" | "sold" | "archived";
+export interface ProductSettings {
+  id: string;
+  organization_id: string;
+  available_tags: string[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateProductSettingsRequest {
+  available_tags?: string[];
+}
+
+export interface UpdateProductSettingsRequest {
+  available_tags?: string[];
 } 

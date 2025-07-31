@@ -10,18 +10,15 @@
 import { useState, useEffect } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
-import { Plus, Upload, X, FileText } from 'lucide-react'
+import { Plus, X, Edit, Calendar } from 'lucide-react'
 import { BlogPost } from '@/lib/types/website'
-import { uploadFileToS3, validateImageFile } from '@/lib/s3-upload'
-import { generateSlug } from '@/lib/utils'
+import BlogPostModal from './BlogPostModal'
 
 export default function BlogPostsPage() {
   const [blogPosts, setBlogPosts] = useState<BlogPost[]>([])
-  const [uploadingPosts, setUploadingPosts] = useState<Set<number>>(new Set())
   const [isLoading, setIsLoading] = useState(true)
+  const [editingPost, setEditingPost] = useState<BlogPost | null>(null)
+  const [editModalOpen, setEditModalOpen] = useState(false)
 
   // Load blog posts on mount
   useEffect(() => {
@@ -38,7 +35,9 @@ export default function BlogPostsPage() {
           title: post.title,
           image: post.image_url || '',
           body: post.body || '',
-          slug: post.slug
+          slug: post.slug,
+          created_at: post.created_at,
+          is_published: post.is_published
         }))
         setBlogPosts(transformedPosts)
       } else {
@@ -51,101 +50,29 @@ export default function BlogPostsPage() {
     }
   }
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, postIndex: number) => {
-    const file = e.target.files?.[0]
-    if (!file) return
+  const handleAdd = (newPost: BlogPost) => {
+    setBlogPosts([newPost, ...blogPosts])
+  }
 
-    // Validate file using utility function
-    const validation = validateImageFile(file)
-    if (!validation.valid) {
-      alert(validation.error)
-      return
-    }
+  const handleEdit = (post: BlogPost) => {
+    setEditingPost(post)
+    setEditModalOpen(true)
+  }
 
-    setUploadingPosts(prev => new Set([...prev, postIndex]))
+  const handlePostUpdated = (updatedPost: BlogPost) => {
+    setBlogPosts(blogPosts.map(p => p.slug === updatedPost.slug ? updatedPost : p))
+  }
+
+  const deleteBlogPost = async (post: BlogPost) => {
+    if (!post.slug) return
     
     try {
-      const uploadResult = await uploadFileToS3(file)
-      
-      if (!uploadResult.success) {
-        throw new Error(uploadResult.error || 'Failed to upload image')
-      }
-
-      const newPosts = [...blogPosts]
-      newPosts[postIndex] = { ...newPosts[postIndex], image: uploadResult.publicFileUrl! }
-      setBlogPosts(newPosts)
-    } catch (error) {
-      console.error('Upload error:', error)
-      alert('Failed to upload image')
-    } finally {
-      setUploadingPosts(prev => {
-        const newSet = new Set(prev)
-        newSet.delete(postIndex)
-        return newSet
+      await fetch(`/api/blog-posts/${post.slug}`, {
+        method: 'DELETE',
       })
-    }
-  }
-
-  const addBlogPost = () => {
-    setBlogPosts([...blogPosts, { title: '', image: '', body: '', slug: '' }])
-  }
-
-  const removeBlogPost = async (index: number) => {
-    const postToRemove = blogPosts[index]
-    
-    // If the post has a slug and we're removing it, we should delete it from the database
-    if (postToRemove.slug && postToRemove.title) {
-      try {
-        await fetch(`/api/blog-posts/${postToRemove.slug}`, {
-          method: 'DELETE',
-        })
-      } catch (error) {
-        console.error('Error deleting blog post:', error)
-      }
-    }
-    
-    setBlogPosts(blogPosts.filter((_, i) => i !== index))
-  }
-
-  const updateBlogPost = (index: number, field: keyof BlogPost, value: string) => {
-    const newPosts = [...blogPosts]
-    if (field === 'title') {
-      const newSlug = generateSlug(value)
-      newPosts[index] = { ...newPosts[index], title: value, slug: newSlug }
-    } else {
-      newPosts[index] = { ...newPosts[index], [field]: value }
-    }
-    setBlogPosts(newPosts)
-  }
-
-  const saveBlogPost = async (post: BlogPost, index: number) => {
-    if (!post.title) return
-
-    try {
-      const response = await fetch('/api/blog-posts', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(post),
-      })
-
-      if (response.ok) {
-        const savedPost = await response.json()
-        const newPosts = [...blogPosts]
-        newPosts[index] = {
-          title: savedPost.title,
-          image: savedPost.image_url || '',
-          body: savedPost.body || '',
-          slug: savedPost.slug
-        }
-        setBlogPosts(newPosts)
-        console.log('Blog post saved successfully')
-      } else {
-        console.error('Failed to save blog post')
-      }
+      setBlogPosts(blogPosts.filter(p => p.slug !== post.slug))
     } catch (error) {
-      console.error('Error saving blog post:', error)
+      console.error('Error deleting blog post:', error)
     }
   }
 
@@ -169,138 +96,121 @@ export default function BlogPostsPage() {
             Manage your blog posts content
           </p>
         </div>
-        <Button onClick={addBlogPost} className="flex items-center gap-2">
-          <Plus className="w-4 h-4" />
-          Add Blog Post
-        </Button>
+        <BlogPostModal
+          mode="add"
+          onPostAdded={handleAdd}
+          trigger={
+            <Button className="flex items-center gap-2">
+              <Plus className="w-4 h-4" />
+              New Blog Post
+            </Button>
+          }
+        />
       </div>
 
-      <div className="space-y-6">
+      {/* Blog Posts Grid */}
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {blogPosts.map((post, index) => (
-          <Card key={index}>
+          <Card key={post.slug || index} className="hover:shadow-md transition-shadow">
             <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold">Blog Post {index + 1}</h3>
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => saveBlogPost(post, index)}
-                    disabled={!post.title}
-                  >
-                    Save
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => removeBlogPost(index)}
-                    className="text-red-600 hover:text-red-700"
-                  >
-                    <X className="w-4 h-4" />
-                  </Button>
-                </div>
-              </div>
-              
-              <div className="grid gap-6 md:grid-cols-2">
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label>Title</Label>
-                    <Input
-                      value={post.title}
-                      onChange={(e) => updateBlogPost(index, 'title', e.target.value)}
-                      placeholder="Post title"
+              <div className="space-y-4">
+                {/* Image */}
+                {post.image && (
+                  <div className="aspect-[4/3] overflow-hidden rounded-lg max-h-12">
+                    <img 
+                      src={post.image} 
+                      alt={post.title} 
+                      className="w-full h-full object-cover"
                     />
-                    {post.slug && (
-                      <p className="text-xs text-muted-foreground">Slug: {post.slug}</p>
-                    )}
                   </div>
-                  
-                  <div className="space-y-2">
-                    <Label>Image</Label>
-                    <div className="space-y-2">
-                      {post.image ? (
-                        <div className="flex items-center gap-2">
-                          <div className="relative">
-                            <img 
-                              src={post.image} 
-                              alt={`Post ${index + 1} image`} 
-                              className="h-16 w-20 object-cover border rounded"
-                            />
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              className="absolute -top-1 -right-1 h-5 w-5 p-0"
-                              onClick={() => updateBlogPost(index, 'image', '')}
-                            >
-                              <X className="h-3 w-3" />
-                            </Button>
-                          </div>
-                          <div className="flex-1">
-                            <p className="text-xs text-muted-foreground truncate">{post.image}</p>
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="border border-dashed border-gray-300 rounded p-3 text-center">
-                          <Upload className="mx-auto h-4 w-4 text-gray-400 mb-1" />
-                          <p className="text-xs text-gray-600 mb-1">Upload image</p>
-                          <p className="text-xs text-gray-500 mb-2">PNG, JPG up to 2MB</p>
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={() => document.getElementById(`post-image-upload-${index}`)?.click()}
-                            disabled={uploadingPosts.has(index)}
-                          >
-                            {uploadingPosts.has(index) ? 'Uploading...' : 'Choose File'}
-                          </Button>
-                        </div>
-                      )}
-                      <input
-                        id={`post-image-upload-${index}`}
-                        type="file"
-                        accept="image/*"
-                        onChange={(e) => handleImageUpload(e, index)}
-                        className="hidden"
-                      />
-                    </div>
+                )}
+                
+                {/* Content */}
+                <div className="space-y-2">
+                  <h3 className="font-semibold text-lg line-clamp-2">{post.title}</h3>
+                  <p className="text-sm text-muted-foreground line-clamp-3">
+                    {post.body || 'No content'}
+                  </p>
+                </div>
+                
+                {/* Meta */}
+                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                  <div className="flex items-center gap-1">
+                    <Calendar className="w-3 h-3" />
+                    {post.created_at ? new Date(post.created_at).toLocaleDateString() : 'Draft'}
+                  </div>
+                  <div className="flex items-center gap-1">
+                    {post.is_published ? (
+                      <span className="text-green-600">Published</span>
+                    ) : (
+                      <span className="text-orange-600">Draft</span>
+                    )}
                   </div>
                 </div>
                 
-                <div className="space-y-2">
-                  <Label>Body</Label>
-                  <Textarea
-                    value={post.body}
-                    onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => 
-                      updateBlogPost(index, 'body', e.target.value)
-                    }
-                    placeholder="Post body"
-                    rows={8}
-                  />
+                {/* Actions */}
+                <div className="flex gap-2 pt-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleEdit(post)}
+                    className="flex-1"
+                  >
+                    <Edit className="w-3 h-3 mr-1" />
+                    Edit
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => deleteBlogPost(post)}
+                    className="text-red-600 hover:text-red-700"
+                  >
+                    <X className="w-3 h-3" />
+                  </Button>
                 </div>
               </div>
             </CardContent>
           </Card>
         ))}
-        
-        {blogPosts.length === 0 && (
-          <Card>
-            <CardContent className="p-12 text-center">
-              <div className="space-y-4">
-                <FileText className="mx-auto h-12 w-12 text-gray-400" />
-                <div>
-                  <h3 className="text-lg font-medium text-gray-900">No blog posts yet</h3>
-                  <p className="text-gray-500">Get started by creating your first blog post.</p>
-                </div>
-                <Button onClick={addBlogPost} className="flex items-center gap-2 mx-auto">
-                  <Plus className="w-4 h-4" />
-                  Add Blog Post
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        )}
       </div>
+      
+      {/* Empty State */}
+      {blogPosts.length === 0 && (
+        <Card>
+          <CardContent className="p-12 text-center">
+            <div className="space-y-4">
+              <div className="mx-auto h-12 w-12 text-gray-400">
+                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-lg font-medium text-gray-900">No blog posts yet</h3>
+                <p className="text-gray-500">Get started by creating your first blog post.</p>
+              </div>
+              <BlogPostModal
+                mode="add"
+                onPostAdded={handleAdd}
+                trigger={
+                  <Button className="flex items-center gap-2 mx-auto">
+                    <Plus className="w-4 h-4" />
+                    New Blog Post
+                  </Button>
+                }
+              />
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Edit Modal */}
+      <BlogPostModal
+        mode="edit"
+        post={editingPost}
+        open={editModalOpen}
+        onOpenChange={setEditModalOpen}
+        onPostUpdated={handlePostUpdated}
+      />
     </div>
   )
 } 

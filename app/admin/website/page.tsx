@@ -12,14 +12,14 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { WebsiteData } from '@/lib/types/website'
-import { ThemeSelector } from '@/app/website/theme-selector'
+import { ThemeSelector } from '@/app/admin/website/theme-selector'
 import { Globe } from 'lucide-react'
 import { Navigation } from './Navigation'
 import { Hero } from './Hero'
 import { BlogPosts } from './BlogPosts'
 import { Footer } from './Footer'
 import { Switch } from '@/components/ui/switch'
-import { CustomThemeModal } from '@/app/website/custom-theme-modal'
+import { CustomThemeModal } from '@/app/admin/website/custom-theme-modal'
 
 // Default website data
 const defaultWebsiteData: WebsiteData = {

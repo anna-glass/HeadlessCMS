@@ -19,28 +19,28 @@ import {
 import Image from "next/image"
 import { UserButton } from '@stackframe/stack';
 import { Organization } from "@/lib/types/organization";
-import { OrganizationEditModal } from "./organization-edit-modal";
+import { OrganizationEditModal } from "@/components/organization-edit-modal";
 
 // Menu items.
 const items = [
   {
     title: "Dashboard",
-    url: "/dashboard",
+    url: "/admin/dashboard",
     icon: BarChart3,
   },
   {
     title: "Inventory",
-    url: "/inventory",
+    url: "/admin/inventory",
     icon: Package,
   },
   {
     title: "Website",
-    url: "/website",
+    url: "/admin/website",
     icon: Globe,
   },
   {
     title: "Blog Posts",
-    url: "/blog-posts",
+    url: "/admin/blog-posts",
     icon: FileText,
   },
 ]

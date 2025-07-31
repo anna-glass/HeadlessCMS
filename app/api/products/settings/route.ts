@@ -63,7 +63,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body: CreateProductSettingsRequest = await request.json();
-    const { available_tags } = body;
+    const { available_categories } = body;
 
     // Get user's organization
     const userOrganizations = await sql`
@@ -78,8 +78,8 @@ export async function POST(request: NextRequest) {
 
     // Create product settings
     const result = await sql`
-      INSERT INTO product_settings (organization_id, available_tags)
-      VALUES (${organizationId}, ${available_tags || []})
+      INSERT INTO product_settings (organization_id, available_categories)
+      VALUES (${organizationId}, ${available_categories || []})
       RETURNING *
     `;
 
@@ -103,7 +103,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     const body: UpdateProductSettingsRequest = await request.json();
-    const { available_tags } = body;
+    const { available_categories } = body;
 
     // Get user's organization
     const userOrganizations = await sql`
@@ -119,7 +119,7 @@ export async function PATCH(request: NextRequest) {
     // Update product settings
     const result = await sql`
       UPDATE product_settings 
-      SET available_tags = ${available_tags || []}, updated_at = NOW()
+      SET available_categories = ${available_categories || []}, updated_at = NOW()
       WHERE organization_id = ${organizationId}
       RETURNING *
     `;
@@ -127,8 +127,8 @@ export async function PATCH(request: NextRequest) {
     if (result.length === 0) {
       // Create settings if they don't exist
       const createResult = await sql`
-        INSERT INTO product_settings (organization_id, available_tags)
-        VALUES (${organizationId}, ${available_tags || []})
+        INSERT INTO product_settings (organization_id, available_categories)
+        VALUES (${organizationId}, ${available_categories || []})
         RETURNING *
       `;
       return NextResponse.json(createResult[0]);

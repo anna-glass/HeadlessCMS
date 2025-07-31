@@ -39,7 +39,7 @@ export interface Product {
   price: number;
   stock: number;
   images: string[];
-  tags: string[];
+  category?: string;
   status: "draft" | "scheduled" | "live" | "sold" | "archived";
   drop_id?: string;
   created_at: string;

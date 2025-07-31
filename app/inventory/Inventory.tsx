@@ -126,7 +126,7 @@ export default function Inventory({ initialData }: { initialData: Product[] }) {
               <TableHead>Description</TableHead>
               <TableHead>Price</TableHead>
               <TableHead>Stock</TableHead>
-              <TableHead>Tags</TableHead>
+              <TableHead>Category</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Created At</TableHead>
               <TableHead>Actions</TableHead>
@@ -166,19 +166,12 @@ export default function Inventory({ initialData }: { initialData: Product[] }) {
                 <TableCell>${(product.price / 100).toFixed(2)}</TableCell>
                 <TableCell>{product.stock}</TableCell>
                 <TableCell>
-                  {product.tags && product.tags.length > 0 ? (
-                    <div className="flex flex-wrap gap-1">
-                      {product.tags.map((tag, index) => (
-                        <span
-                          key={index}
-                          className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
-                        >
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
+                  {product.category ? (
+                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                      {product.category}
+                    </span>
                   ) : (
-                    <span className="text-muted-foreground text-sm">No tags</span>
+                    <span className="text-muted-foreground text-sm">No category</span>
                   )}
                 </TableCell>
                 <TableCell>

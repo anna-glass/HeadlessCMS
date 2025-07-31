@@ -30,7 +30,7 @@ import {
 } from '@/components/ui/select'
 import { Product, ProductSettings } from '@/lib/types/product'
 import ImageUpload from './ImageUpload'
-import { Plus, X } from 'lucide-react'
+import { ChevronDown, Search } from 'lucide-react'
 
 interface ProductModalProps {
   mode: 'add' | 'edit';
@@ -54,7 +54,8 @@ export default function ProductModal({
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [productSettings, setProductSettings] = useState<ProductSettings | null>(null);
-  const [tagInput, setTagInput] = useState('');
+  const [categoryInput, setCategoryInput] = useState('');
+  const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -63,7 +64,7 @@ export default function ProductModal({
     stock: 0,
     status: 'draft' as 'draft' | 'scheduled' | 'live' | 'sold' | 'archived',
     images: [] as string[],
-    tags: [] as string[]
+    category: ''
   });
 
   // Use controlled or uncontrolled open state
@@ -101,8 +102,9 @@ export default function ProductModal({
         stock: product.stock,
         status: product.status,
         images: product.images,
-        tags: product.tags || []
+        category: product.category || ''
       });
+      setCategoryInput(product.category || '');
     } else if (mode === 'add') {
       // Reset form for add mode
       setFormData({
@@ -113,8 +115,9 @@ export default function ProductModal({
         stock: 0,
         status: 'draft',
         images: [],
-        tags: []
+        category: ''
       });
+      setCategoryInput('');
     }
   }, [mode, product]);
 
@@ -140,29 +143,35 @@ export default function ProductModal({
     }));
   };
 
-  const addTag = (tag: string) => {
-    const trimmedTag = tag.trim();
-    if (trimmedTag && !formData.tags.includes(trimmedTag)) {
-      setFormData(prev => ({
-        ...prev,
-        tags: [...prev.tags, trimmedTag]
-      }));
-      setTagInput('');
-    }
-  };
-
-  const removeTag = (tagToRemove: string) => {
+  const handleCategoryChange = (value: string) => {
+    setCategoryInput(value);
     setFormData(prev => ({
       ...prev,
-      tags: prev.tags.filter(tag => tag !== tagToRemove)
+      category: value
     }));
+    setShowCategoryDropdown(true);
   };
 
-  const handleTagInputKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      addTag(tagInput);
-    }
+  const selectCategory = (category: string) => {
+    setCategoryInput(category);
+    setFormData(prev => ({
+      ...prev,
+      category: category
+    }));
+    setShowCategoryDropdown(false);
+  };
+
+  const filteredCategories = productSettings?.available_categories?.filter(cat =>
+    cat.toLowerCase().includes((categoryInput || '').toLowerCase())
+  ) || [];
+
+  const handleCategoryInputFocus = () => {
+    setShowCategoryDropdown(true);
+  };
+
+  const handleCategoryInputBlur = () => {
+    // Delay hiding dropdown to allow for clicks
+    setTimeout(() => setShowCategoryDropdown(false), 200);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -270,66 +279,36 @@ export default function ProductModal({
               />
             </div>
             
-            {/* Tags Section */}
+            {/* Category Section */}
             <div className="grid gap-2">
-              <Label htmlFor="tags">Tags</Label>
-              <div className="space-y-2">
-                <div className="flex gap-2">
-                  <Input
-                    id="tags"
-                    value={tagInput}
-                    onChange={(e) => setTagInput(e.target.value)}
-                    onKeyDown={handleTagInputKeyDown}
-                    placeholder="Type a tag and press Enter"
-                  />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => addTag(tagInput)}
-                  >
-                    <Plus className="h-4 w-4" />
-                  </Button>
-                </div>
-                
-                {/* Available tags suggestions */}
-                {productSettings?.available_tags && productSettings.available_tags.length > 0 && (
-                  <div className="flex flex-wrap gap-1">
-                    {productSettings.available_tags
-                      .filter(tag => !formData.tags.includes(tag))
-                      .map(tag => (
-                        <Button
-                          key={tag}
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => addTag(tag)}
-                          className="text-xs"
-                        >
-                          {tag}
-                        </Button>
-                      ))}
-                  </div>
-                )}
-                
-                {/* Selected tags */}
-                {formData.tags.length > 0 && (
-                  <div className="flex flex-wrap gap-1">
-                    {formData.tags.map(tag => (
-                      <div
-                        key={tag}
-                        className="flex items-center gap-1 bg-blue-100 text-blue-800 px-2 py-1 rounded-md text-sm"
-                      >
-                        <span>{tag}</span>
+              <Label htmlFor="category">Category *</Label>
+              <div className="relative">
+                <Input
+                  id="category"
+                  value={categoryInput}
+                  onChange={(e) => handleCategoryChange(e.target.value)}
+                  onFocus={handleCategoryInputFocus}
+                  onBlur={handleCategoryInputBlur}
+                  placeholder="Select a category"
+                  required
+                />
+                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
+                {showCategoryDropdown && (
+                  <div className="absolute z-50 mt-1 w-full rounded-md bg-white shadow-lg max-h-60 overflow-auto border">
+                    {filteredCategories.length > 0 ? (
+                      filteredCategories.map(category => (
                         <button
+                          key={category}
                           type="button"
-                          onClick={() => removeTag(tag)}
-                          className="text-blue-600 hover:text-blue-800"
+                          className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
+                          onClick={() => selectCategory(category)}
                         >
-                          <X className="h-3 w-3" />
+                          {category}
                         </button>
-                      </div>
-                    ))}
+                      ))
+                    ) : (
+                      <div className="px-4 py-2 text-sm text-gray-500">No categories found</div>
+                    )}
                   </div>
                 )}
               </div>

@@ -23,7 +23,7 @@ export async function PATCH(
 
     const { id } = await params;
     const body: UpdateProductRequest = await request.json();
-    const { name, description, price, stock, images, tags, status } = body;
+    const { name, description, price, stock, images, category, status } = body;
 
     // Get user's organization
     const userOrganizations = await sql`
@@ -45,7 +45,7 @@ export async function PATCH(
         price = COALESCE(${price}, price),
         stock = COALESCE(${stock}, stock),
         images = COALESCE(${images}, images),
-        tags = COALESCE(${tags}, tags),
+        category = COALESCE(${category}, category),
         status = COALESCE(${status}, status),
         updated_at = now()
       WHERE id = ${id} AND organization_id = ${organizationId}
@@ -58,25 +58,27 @@ export async function PATCH(
 
     const product = result[0];
 
-    // Update product settings with new tags if any
-    if (tags && tags.length > 0) {
+    // Update product settings with new category if provided
+    if (category) {
       const currentSettings = await sql`
-        SELECT available_tags FROM product_settings WHERE organization_id = ${organizationId}
+        SELECT available_categories FROM product_settings WHERE organization_id = ${organizationId}
       `;
 
       if (currentSettings.length > 0) {
-        const currentTags = currentSettings[0].available_tags || [];
-        const newTags = [...new Set([...currentTags, ...tags])];
-        
-        await sql`
-          UPDATE product_settings 
-          SET available_tags = ${newTags}, updated_at = NOW()
-          WHERE organization_id = ${organizationId}
-        `;
+        const currentCategories = currentSettings[0].available_categories || [];
+        if (!currentCategories.includes(category)) {
+          const newCategories = [...currentCategories, category];
+          
+          await sql`
+            UPDATE product_settings 
+            SET available_categories = ${newCategories}, updated_at = NOW()
+            WHERE organization_id = ${organizationId}
+          `;
+        }
       } else {
         await sql`
-          INSERT INTO product_settings (organization_id, available_tags)
-          VALUES (${organizationId}, ${tags})
+          INSERT INTO product_settings (organization_id, available_categories)
+          VALUES (${organizationId}, ${[category]})
         `;
       }
     }

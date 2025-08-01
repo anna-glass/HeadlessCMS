@@ -1,6 +1,6 @@
 'use client'
 
-import { Home, Package, Edit, BarChart3, Globe, FileText, Calendar, ShoppingBag } from "lucide-react"
+import { Home, Package, Edit, BarChart3, Globe, FileText, Calendar, ShoppingBag, Palette } from "lucide-react"
 import { useState } from "react"
 
 import {
@@ -39,14 +39,14 @@ const items = [
     icon: ShoppingBag,
   },
   {
-    title: "Scheduled Drops",
+    title: "Drop Planning",
     url: "/drops",
     icon: Calendar,
   },
   {
-    title: "Website",
+    title: "Website builder",
     url: "/website",
-    icon: Globe,
+    icon: Palette,
   },
   {
     title: "Blog Posts",
@@ -70,38 +70,36 @@ export function AppSidebar({ organization }: AppSidebarProps) {
     <Sidebar collapsible="icon">
       <SidebarHeader className="p-4">
         <div className="flex items-center gap-4">
-          {currentOrganization?.logo_url ? (
-            <div className="w-10 h-10 rounded-md overflow-hidden flex-shrink-0">
-              <Image 
-                src={currentOrganization.logo_url} 
-                alt={currentOrganization.name} 
-                width={40} 
-                height={40} 
-                className="w-full h-full object-cover"
-                priority 
-              />
-            </div>
-          ) : (
-            <div className="w-10 h-10 bg-gray-200 rounded-md flex items-center justify-center flex-shrink-0">
-              <Package className="w-5 h-5 text-gray-500" />
-            </div>
-          )}
+          <OrganizationEditModal
+            organization={currentOrganization}
+            onOrganizationUpdated={handleOrganizationUpdated}
+            trigger={
+              currentOrganization?.logo_url ? (
+                <div className="w-10 h-10 rounded-md overflow-hidden flex-shrink-0 cursor-pointer">
+                  <Image 
+                    src={currentOrganization.logo_url} 
+                    alt={currentOrganization.name} 
+                    width={40} 
+                    height={40} 
+                    className="w-full h-full object-cover"
+                    priority 
+                  />
+                </div>
+              ) : (
+                <div className="w-10 h-10 bg-gray-200 rounded-md flex items-center justify-center flex-shrink-0 cursor-pointer">
+                  <Package className="w-5 h-5 text-gray-500" />
+                </div>
+              )
+            }
+          />
           <div className="flex flex-col min-w-0 flex-1">
             <h3 className="text-sm font-semibold truncate">
               {currentOrganization?.name || 'Organization'}
             </h3>
           </div>
-          <OrganizationEditModal
-            organization={currentOrganization}
-            onOrganizationUpdated={handleOrganizationUpdated}
-            trigger={
-              <button className="p-1 hover:bg-gray-100 rounded-md transition-colors">
-                <Edit className="w-4 h-4 text-gray-500" />
-              </button>
-            }
-          />
         </div>
       </SidebarHeader>
+
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupContent>

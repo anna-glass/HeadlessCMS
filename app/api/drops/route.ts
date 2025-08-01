@@ -71,7 +71,7 @@ export async function POST(request: NextRequest) {
               'price', p.price,
               'stock', p.stock,
               'images', p.images,
-              'tags', p.tags,
+              'category', p.category,
               'status', p.status,
               'drop_id', p.drop_id,
               'created_at', p.created_at,

@@ -113,6 +113,13 @@ export default function Inventory({ initialData }: { initialData: Product[] }) {
 
   return (
     <div className="w-full">
+      {/* Header */}
+      <div className="mb-4">
+        <h1 className="text-3xl font-bold tracking-tight">Inventory</h1>
+        <p className="text-muted-foreground">
+          Add new inventory, edit existing inventory, and manage the status of your products
+        </p>
+      </div>
       <div className="flex justify-between mb-4">
         <Input
           placeholder="Search products..."

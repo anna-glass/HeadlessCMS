@@ -30,7 +30,7 @@ export default function OrdersPage({ initialData }: OrdersPageProps) {
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Orders</h1>
         <p className="text-muted-foreground">
-          View and manage your customer orders
+          View orders, slice and dice the data, and export as csv
         </p>
       </div>
 

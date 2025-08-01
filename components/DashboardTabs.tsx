@@ -1,21 +1,24 @@
 'use client'
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Product } from "@/lib/types/product";
 import { DashboardStats } from "@/lib/types/transaction";
-import { DollarSign, ShoppingCart, Bell } from "lucide-react";
+import { DollarSign, ShoppingCart, Bell, BarChart3, Receipt } from "lucide-react";
 import { RevenueChart } from "@/components/RevenueChart";
 import { InventoryAddedChart } from "@/components/InventoryAddedChart";
 import { InventoryStatusDonut } from "@/components/InventoryStatusDonut";
 import { InventoryCategoryChart } from "@/components/InventoryCategoryChart";
-import { PageLoader } from "@/components/ui/loader";
+import SalesTable from "@/components/SalesTable";
 
-interface DashboardProps {
+interface DashboardTabsProps {
   products: Product[];
+  transactions: any[];
 }
 
-export default function Dashboard({ products }: DashboardProps) {
+export default function DashboardTabs({ products, transactions }: DashboardTabsProps) {
+  const [activeTab, setActiveTab] = useState<'overview' | 'sales'>('overview');
   const [stats, setStats] = useState<DashboardStats>({
     total_revenue: 0,
     total_sales: 0,
@@ -24,24 +27,6 @@ export default function Dashboard({ products }: DashboardProps) {
     top_selling_products: []
   });
   const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchDashboardStats = async () => {
-      try {
-        const response = await fetch('/api/dashboard/stats');
-        if (response.ok) {
-          const data = await response.json();
-          setStats(data);
-        }
-      } catch (error) {
-        console.error('Error fetching dashboard stats:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchDashboardStats();
-  }, []);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -76,10 +61,6 @@ export default function Dashboard({ products }: DashboardProps) {
       </CardContent>
     </Card>
   );
-
-  if (isLoading) {
-    return <PageLoader />;
-  }
 
   return (
     <div className="flex flex-col gap-4">
@@ -117,31 +98,62 @@ export default function Dashboard({ products }: DashboardProps) {
         </Card>
       </div>
 
-      {/* Charts and Detailed Stats */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-        {/* Revenue Chart */}
-        <div className="col-span-4">
-          <RevenueChart />
-        </div>
-
-        {/* Inventory Status Donut */}
-        <div className="col-span-3">
-          <InventoryStatusDonut />
-        </div>
+      {/* Tab Navigation */}
+      <div className="flex space-x-1 border-b">
+        <Button
+          variant={activeTab === 'overview' ? 'default' : 'ghost'}
+          onClick={() => setActiveTab('overview')}
+          className="flex items-center space-x-2"
+        >
+          <BarChart3 className="h-4 w-4" />
+          <span>Overview</span>
+        </Button>
+        <Button
+          variant={activeTab === 'sales' ? 'default' : 'ghost'}
+          onClick={() => setActiveTab('sales')}
+          className="flex items-center space-x-2"
+        >
+          <Receipt className="h-4 w-4" />
+          <span>Sales</span>
+        </Button>
       </div>
 
-      {/* Inventory Charts */}
-      <div className="grid gap-4 md:grid-cols-2">
-        {/* Inventory Added Over Time */}
-        <div>
-          <InventoryAddedChart />
-        </div>
+      {/* Tab Content */}
+      {activeTab === 'overview' && (
+        <>
+          {/* Charts and Detailed Stats */}
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
+            {/* Revenue Chart */}
+            <div className="col-span-4">
+              <RevenueChart />
+            </div>
 
-        {/* Category Chart */}
-        <div>
-          <InventoryCategoryChart />
+            {/* Inventory Status Donut */}
+            <div className="col-span-3">
+              <InventoryStatusDonut />
+            </div>
+          </div>
+
+          {/* Inventory Charts */}
+          <div className="grid gap-4 md:grid-cols-2">
+            {/* Inventory Added Over Time */}
+            <div>
+              <InventoryAddedChart />
+            </div>
+
+            {/* Category Chart */}
+            <div>
+              <InventoryCategoryChart />
+            </div>
+          </div>
+        </>
+      )}
+
+      {activeTab === 'sales' && (
+        <div className="space-y-4">
+          <SalesTable initialData={transactions} />
         </div>
-      </div>
+      )}
     </div>
   );
 } 

@@ -233,3 +233,16 @@ CREATE TABLE drops (
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 */
+
+// SQL schema for transactions table:
+/*
+CREATE TABLE transactions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+    product_id UUID NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+    quantity INTEGER NOT NULL DEFAULT 1,
+    unit_price INTEGER NOT NULL, -- stored in cents
+    total_amount INTEGER NOT NULL, -- stored in cents
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+*/

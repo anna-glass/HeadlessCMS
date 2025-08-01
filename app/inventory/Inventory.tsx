@@ -7,7 +7,7 @@
 
 'use client'
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Product } from "@/lib/types/product";
@@ -29,12 +29,23 @@ import {
 import ProductModal from "./ProductModal";
 import { MoreHorizontal, Edit, Trash2, Eye, EyeOff, Archive, Plus, Clock, CheckCircle, Image as ImageIcon } from "lucide-react";
 import Image from "next/image";
+import { PageLoader } from "@/components/ui/loader";
 
 export default function Inventory({ initialData }: { initialData: Product[] }) {
   const [data, setData] = useState<Product[]>(initialData);
   const [globalFilter, setGlobalFilter] = useState("");
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [editModalOpen, setEditModalOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    // Simulate a brief loading time for better UX
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, []);
 
   // Filter products based on search
   const filteredProducts = data.filter(product =>
@@ -95,6 +106,10 @@ export default function Inventory({ initialData }: { initialData: Product[] }) {
         return 'bg-gray-100 text-gray-800';
     }
   };
+
+  if (isLoading) {
+    return <PageLoader />;
+  }
 
   return (
     <div className="w-full">
